@@ -28,6 +28,8 @@ class AVLTree {
         y.height = Math.max(this.height(y.left), this.height(y.right)) + 1;
         x.height = Math.max(this.height(x.left), this.height(x.right)) + 1;
         this.rightRotations++;
+        console.log("right rot"+ this.rightRotations);
+        this.updateRotationCount();
         return x;
     }
 
@@ -39,6 +41,8 @@ class AVLTree {
         x.height = Math.max(this.height(x.left), this.height(x.right)) + 1;
         y.height = Math.max(this.height(y.left), this.height(y.right)) + 1;
         this.leftRotations++;
+        console.log("left rot"+this.leftRotations)
+        this.updateRotationCount()
         return y;
     }
 
@@ -47,6 +51,7 @@ class AVLTree {
     }
 
     insert(node, key) {
+        console.log(`Inserting key: ${key}`);
         if (!node) return new AVLNode(key);
 
         if (key < node.key) {
@@ -58,29 +63,33 @@ class AVLTree {
         }
 
         node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
-
         const balance = this.getBalance(node);
+        console.log(`Balance after inserting key ${key}: ${balance}`);
 
         if (balance > 1 && key < node.left.key) {
+            console.log(`Right Rotate on node with key ${node.key}`);
             return this.rightRotate(node);
         }
 
         if (balance < -1 && key > node.right.key) {
+            console.log(`Left Rotate on node with key ${node.key}`);
             return this.leftRotate(node);
         }
 
         if (balance > 1 && key > node.left.key) {
+            console.log(`Left-Right Rotate on node with key ${node.key}`);
             node.left = this.leftRotate(node.left);
             this.leftRightRotations++;
             return this.rightRotate(node);
         }
 
         if (balance < -1 && key < node.right.key) {
+            console.log(`Right-Left Rotate on node with key ${node.key}`);
             node.right = this.rightRotate(node.right);
             this.rightLeftRotations++;
             return this.leftRotate(node);
         }
-
+        this.updateRotationCount();
         return node;
     }
 
@@ -111,20 +120,34 @@ class AVLTree {
     addNode(key) {
         this.root = this.insert(this.root, key);
     }
+
+    updateRotationCount() {
+        console.log(`Rotation Counts - Left: ${this.leftRotations}, Right: ${this.rightRotations}, Left-Right: ${this.leftRightRotations}, Right-Left: ${this.rightLeftRotations}`);
+        document.getElementById('left-rotations').textContent = this.leftRotations;
+        document.getElementById('right-rotations').textContent = this.rightRotations;
+        document.getElementById('left-right-rotations').textContent = this.leftRightRotations;
+        document.getElementById('right-left-rotations').textContent = this.rightLeftRotations;
+    }
 }
 
 const tree = new AVLTree();
-function addValue() {
+
+function addValues() {
     const valueInput = document.getElementById('valueInput');
-    const value = parseInt(valueInput.value, 10);
-    if (!isNaN(value)) {
-        tree.addNode(value);
+    const values = valueInput.value.split(/[\s,]+/).map(v => parseInt(v, 10)).filter(v => !isNaN(v));
+    console.log('Adding values:', values);
+    if (values.length > 0) {
+        values.forEach(value => {
+            tree.addNode(value);
+        });
         valueInput.value = '';
     } else {
-        alert('Please enter a valid number');
+        alert('Please enter a valid number or list of numbers, separated by commas or spaces.');
     }
 }
-let i =0;
+
+let i = 0;
+
 function renderTree() {
     if (!tree.root) {
         alert('The tree is empty. Please add some nodes first.');
@@ -145,7 +168,7 @@ function renderTree() {
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    const treeLayout = d3.tree().size([height, width]);
+    const treeLayout = d3.tree().size([width, height]);
 
     const rootHierarchy = d3.hierarchy(tree.root, d => [d.left, d.right].filter(d => d));
     const treeData = treeLayout(rootHierarchy);
@@ -155,7 +178,7 @@ function renderTree() {
 
     const nodeEnter = nodes.enter().append("g")
         .attr("class", "node")
-        .attr("transform", d => `translate(${d.y},${d.x})`);
+        .attr("transform", d => `translate(${d.x},${d.y})`);
 
     nodeEnter.append("circle")
         .attr("r", 10)
@@ -163,8 +186,8 @@ function renderTree() {
 
     nodeEnter.append("text")
         .attr("dy", ".35em")
-        .attr("y", d => d.children ? -20 : 20)
-        .attr("text-anchor", "middle")
+        .attr("x", d => d.children ? -20 : 20)
+        .attr("text-anchor", d => d.children ? "end" : "start")
         .text(d => d.data.key);
 
     const links = svg.selectAll("path.link")
@@ -172,19 +195,49 @@ function renderTree() {
 
     links.enter().insert("path", "g")
         .attr("class", "link")
-        .attr("d", d3.linkHorizontal()
-            .x(d => d.y)
-            .y(d => d.x)
+        .attr("d", d3.linkVertical()
+            .x(d => d.x)
+            .y(d => d.y)
         );
 }
-function printTraversals() {
-    console.clear();  // Clear the previous logs
-    console.log("PreOrder Traversal:");
-    tree.printPreOrder(tree.root);
 
-    console.log("InOrder Traversal:");
-    tree.printInOrder(tree.root);
+    function printTraversals() {
+        const logArea = document.getElementById('consoleLog');
+        logArea.innerHTML = '';  // Clear the previous logs
 
-    console.log("PostOrder Traversal:");
-    tree.printPostOrder(tree.root);
-}
+        logArea.innerHTML += "PreOrder Traversal:<br>";
+        logTraversal(tree.printPreOrder, tree.root, logArea);
+
+        logArea.innerHTML += "<br>InOrder Traversal:<br>";
+        logTraversal(tree.printInOrder, tree.root, logArea);
+
+        logArea.innerHTML += "<br>PostOrder Traversal:<br>";
+        logTraversal(tree.printPostOrder, tree.root, logArea);
+    }
+
+    function logTraversal(traversalFunction, node, logArea) {
+        const originalLogFunction = traversalFunction;
+        tree[traversalFunction] = function(node) {
+            originalLogFunction.call(tree, node, (message) => {
+                logArea.innerHTML += message + '<br>';
+            });
+        };
+        tree[traversalFunction](node);
+        tree[traversalFunction] = originalLogFunction;
+    }
+
+    function updateLogMethods() {
+        const traversalMethods = ['printPreOrder', 'printInOrder', 'printPostOrder'];
+        traversalMethods.forEach(method => {
+            const originalMethod = AVLTree.prototype[method];
+            AVLTree.prototype[method] = function(node, logger = console.log) {
+                if (node) {
+                    logger(node.key);
+                    this[method](node.left, logger);
+                    this[method](node.right, logger);
+                }
+            };
+        });
+    }
+
+    updateLogMethods();

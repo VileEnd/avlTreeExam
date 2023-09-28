@@ -7,11 +7,31 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-<input type="text" id="valueInput" placeholder="Enter a value" />
-<button onclick="addValue()" class="px-4 py-2 font-bold text-white bg-blue-500 rounded">Add Value</button>
-<button onclick="printTraversals()" class="px-4 py-2 font-bold text-white bg-blue-500 rounded">Print Traversals</button>
-<button onclick="renderTree()" class="px-4 py-2 font-bold text-white bg-blue-500 rounded">Render Tree</button>
+<body class="bg-gray-100 p-10">
+<div class="mb-4">
+    <input type="text" id="valueInput" placeholder="Enter a value" class="px-4 py-2 border border-gray-300 rounded" />
+</div>
+<div class="mb-4 space-x-4">
+    <button onclick="addValues()" class="px-4 py-2 font-bold text-white bg-blue-500 rounded">Add Values</button>
+    <button onclick="printTraversals()" class="px-4 py-2 font-bold text-white bg-blue-500 rounded">Print Traversals</button>
+    <button onclick="renderTree()" class="px-4 py-2 font-bold text-white bg-blue-500 rounded">Render Tree</button>
+</div>
+Rotation Counts:
+<div>
+    Left Rotations: <span id="left-rotations">0</span>
+</div>
+<div>
+    Right Rotations: <span id="right-rotations">0</span>
+</div>
+<div>
+    Left-Right Rotations: <span id="left-right-rotations">0</span>
+</div>
+<div>
+    Right-Left Rotations: <span id="right-left-rotations">0</span>
+</div>
+
+
+<div id="consoleLog" class="p-4 bg-white border border-gray-300 rounded mb-4"></div>
 <div id="tree-container"></div>
 <script src="script.js"></script>
 </body>
