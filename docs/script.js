@@ -7,13 +7,53 @@ class AVLNode {
     }
 }
 
-class AVLTree {
+class UIUpdater {
     constructor() {
-        this.root = null;
         this.leftRotations = 0;
         this.rightRotations = 0;
         this.leftRightRotations = 0;
         this.rightLeftRotations = 0;
+    }
+
+    incrementLeftRotations() {
+        this.leftRotations++;
+        this.updateRotationCount();
+    }
+
+    incrementRightRotations() {
+        this.rightRotations++;
+        this.updateRotationCount();
+    }
+    decrementLeftRightRotation(){
+        this.leftRotations --;
+        this.rightRotations--;
+    }
+
+    incrementLeftRightRotations() {
+        this.leftRightRotations++;
+        this.decrementLeftRightRotation();
+        this.updateRotationCount();
+    }
+
+    incrementRightLeftRotations() {
+        this.rightLeftRotations++;
+        this.decrementLeftRightRotation()
+        this.updateRotationCount();
+    }
+
+    updateRotationCount() {
+        document.getElementById('left-rotations').textContent = this.leftRotations;
+        document.getElementById('right-rotations').textContent = this.rightRotations;
+        document.getElementById('left-right-rotations').textContent = this.leftRightRotations;
+        document.getElementById('right-left-rotations').textContent = this.rightLeftRotations;
+    }
+
+}
+
+class AVLTree {
+    constructor(uiUpdater) {
+        this.root = null;
+        this.uiUpdater = uiUpdater
     }
 
     height(node) {
@@ -27,9 +67,7 @@ class AVLTree {
         y.left = T;
         y.height = Math.max(this.height(y.left), this.height(y.right)) + 1;
         x.height = Math.max(this.height(x.left), this.height(x.right)) + 1;
-        this.rightRotations++;
-        console.log("right rot"+ this.rightRotations);
-        this.updateRotationCount();
+        this.uiUpdater.incrementRightRotations()
         return x;
     }
 
@@ -40,9 +78,7 @@ class AVLTree {
         x.right = T;
         x.height = Math.max(this.height(x.left), this.height(x.right)) + 1;
         y.height = Math.max(this.height(y.left), this.height(y.right)) + 1;
-        this.leftRotations++;
-        console.log("left rot"+this.leftRotations)
-        this.updateRotationCount()
+        this.uiUpdater.incrementLeftRotations()
         return y;
     }
 
@@ -51,9 +87,7 @@ class AVLTree {
     }
 
     insert(node, key) {
-        console.log(`Inserting key: ${key}`);
         if (!node) return new AVLNode(key);
-
         if (key < node.key) {
             node.left = this.insert(node.left, key);
         } else if (key > node.key) {
@@ -64,82 +98,67 @@ class AVLTree {
 
         node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
         const balance = this.getBalance(node);
-        console.log(`Balance after inserting key ${key}: ${balance}`);
 
         if (balance > 1 && key < node.left.key) {
-            console.log(`Right Rotate on node with key ${node.key}`);
             return this.rightRotate(node);
         }
 
         if (balance < -1 && key > node.right.key) {
-            console.log(`Left Rotate on node with key ${node.key}`);
             return this.leftRotate(node);
         }
 
         if (balance > 1 && key > node.left.key) {
-            console.log(`Left-Right Rotate on node with key ${node.key}`);
             node.left = this.leftRotate(node.left);
-            this.leftRightRotations++;
-            this.leftRotations--;
-            this.rightRotations--;
+            this.uiUpdater.incrementLeftRightRotations()
             return this.rightRotate(node);
         }
 
         if (balance < -1 && key < node.right.key) {
-            console.log(`Right-Left Rotate on node with key ${node.key}`);
             node.right = this.rightRotate(node.right);
-            this.rightLeftRotations++;
-            this.leftRotations--;
-            this.rightRotations--;
+            this.uiUpdater.incrementRightLeftRotations()
             return this.leftRotate(node);
         }
-        this.updateRotationCount();
+
         return node;
-    }
-
-    printPreOrder(node) {
-        if (node) {
-            console.log(node.key);
-            this.printPreOrder(node.left);
-            this.printPreOrder(node.right);
-        }
-    }
-
-    printInOrder(node) {
-        if (node) {
-            this.printInOrder(node.left);
-            console.log(node.key);
-            this.printInOrder(node.right);
-        }
-    }
-
-    printPostOrder(node) {
-        if (node) {
-            this.printPostOrder(node.left);
-            this.printPostOrder(node.right);
-            console.log(node.key);
-        }
     }
 
     addNode(key) {
         this.root = this.insert(this.root, key);
     }
 
-    updateRotationCount() {
-        console.log(`Rotation Counts - Left: ${this.leftRotations}, Right: ${this.rightRotations}, Left-Right: ${this.leftRightRotations}, Right-Left: ${this.rightLeftRotations}`);
-        document.getElementById('left-rotations').textContent = this.leftRotations;
-        document.getElementById('right-rotations').textContent = this.rightRotations;
-        document.getElementById('left-right-rotations').textContent = this.leftRightRotations;
-        document.getElementById('right-left-rotations').textContent = this.rightLeftRotations;
+    printPreOrder(node = this.root, logger = console.log) {
+        if (node) {
+            logger(node.key);  // Visit node
+            this.printPreOrder(node.left, logger);  // Visit left subtree
+            this.printPreOrder(node.right, logger);  // Visit right subtree
+        }
+    }
+
+    printInOrder(node = this.root, logger = console.log) {
+        if (node) {
+            this.printInOrder(node.left, logger);  // Visit left subtree
+            logger(node.key + " ");  // Visit node
+            this.printInOrder(node.right, logger);  // Visit right subtree
+        }
+    }
+
+    printPostOrder(node = this.root, logger = console.log) {
+        if (node) {
+            this.printPostOrder(node.left, logger);  // Visit left subtree
+            this.printPostOrder(node.right, logger);  // Visit right subtree
+            logger(node.key + " ");  // Visit node
+        }
     }
 }
 
-const tree = new AVLTree();
+
+const uiUpdater = new UIUpdater();
+const tree = new AVLTree(uiUpdater);
+
 
 function addValues() {
     const valueInput = document.getElementById('valueInput');
     const values = valueInput.value.split(/[\s,]+/).map(v => parseInt(v, 10)).filter(v => !isNaN(v));
-    console.log('Adding values:', values);
     if (values.length > 0) {
         values.forEach(value => {
             tree.addNode(value);
@@ -149,9 +168,7 @@ function addValues() {
         alert('Please enter a valid number or list of numbers, separated by commas or spaces.');
     }
 }
-
 let i = 0;
-
 function renderTree() {
     if (!tree.root) {
         alert('The tree is empty. Please add some nodes first.');
@@ -205,44 +222,6 @@ function renderTree() {
         );
 }
 
-    function printTraversals() {
-        const logArea = document.getElementById('consoleLog');
-        logArea.innerHTML = '';  // Clear the previous logs
-
-        logArea.innerHTML += "PreOrder Traversal:<br>";
-        logTraversal(tree.printPreOrder, tree.root, logArea);
-
-        logArea.innerHTML += "<br>InOrder Traversal:<br>";
-        logTraversal(tree.printInOrder, tree.root, logArea);
-
-        logArea.innerHTML += "<br>PostOrder Traversal:<br>";
-        logTraversal(tree.printPostOrder, tree.root, logArea);
-    }
-
-    function logTraversal(traversalFunction, node, logArea) {
-        const originalLogFunction = traversalFunction;
-        tree[traversalFunction] = function(node) {
-            originalLogFunction.call(tree, node, (message) => {
-                logArea.innerHTML += message + '<br>';
-            });
-        };
-        tree[traversalFunction](node);
-        tree[traversalFunction] = originalLogFunction;
-    }
-
-    function updateLogMethods() {
-        const traversalMethods = ['printPreOrder', 'printInOrder', 'printPostOrder'];
-        traversalMethods.forEach(method => {
-            const originalMethod = AVLTree.prototype[method];
-            AVLTree.prototype[method] = function(node, logger = console.log) {
-                if (node) {
-                    logger(node.key);
-                    this[method](node.left, logger);
-                    this[method](node.right, logger);
-                }
-            };
-        });
-    }
 function updateDimensions() {
     const margin = {top: 20, right: 20, bottom: 20, left: 20},
         width = window.innerWidth - margin.right - margin.left - 40,
@@ -255,4 +234,19 @@ function updateDimensions() {
 
 window.onresize = updateDimensions;
 
-    updateLogMethods();
+function printTraversals() {
+    let preOrderResult = [];
+    let inOrderResult = [];
+    let postOrderResult = [];
+
+    tree.printPreOrder(undefined,(value) => preOrderResult.push(value));
+    tree.printInOrder(undefined,(value) => inOrderResult.push(value));
+    tree.printPostOrder(undefined,(value) => postOrderResult.push(value));
+
+    updateTraversalResults(preOrderResult, inOrderResult, postOrderResult);
+}
+
+function updateTraversalResults(preOrder, inOrder, postOrder) {
+    const resultBox = document.getElementById('resultBox');
+    resultBox.value = `Pre-order: ${preOrder}\nIn-order: ${inOrder.join(' ')}\nPost-order: ${postOrder.join(' ')}`;
+}
