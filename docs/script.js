@@ -152,8 +152,9 @@ class AVLTree {
 }
 
 
-const uiUpdater = new UIUpdater();
-const tree = new AVLTree(uiUpdater);
+let uiUpdater = new UIUpdater();
+let tree = new AVLTree(uiUpdater);
+let allNumbers = [];
 
 
 function addValues() {
@@ -163,7 +164,16 @@ function addValues() {
         values.forEach(value => {
             tree.addNode(value);
         });
+
+        let operations = localStorage.getItem('operations');
+        operations = operations ? JSON.parse(operations) : [];
+        operations.push({type: 'addValues', values: values});
+        localStorage.setItem('operations', JSON.stringify(operations));
+
         valueInput.value = '';
+        renderTree();
+        printTraversals()
+
     } else {
         alert('Please enter a valid number or list of numbers, separated by commas or spaces.');
     }
@@ -249,4 +259,39 @@ function printTraversals() {
 function updateTraversalResults(preOrder, inOrder, postOrder) {
     const resultBox = document.getElementById('resultBox');
     resultBox.value = `Pre-order: ${preOrder}\nIn-order: ${inOrder.join(' ')}\nPost-order: ${postOrder.join(' ')}`;
+}
+function resetTree() {
+    tree = new AVLTree(uiUpdater);
+    uiUpdater = new UIUpdater();
+    uiUpdater.updateRotationCount();
+    document.getElementById('resultBox').value = '';
+    document.getElementById('valueInput').value = '';
+
+    // Remove the existing SVG to clear the displayed tree
+    d3.select("#tree-container").select("svg").remove();
+
+    // Clear the operations from local storage
+    localStorage.removeItem('operations');
+}
+
+function executeSavedOperations() {
+    const savedOperations = localStorage.getItem('operations');
+    if (savedOperations) {
+        const operations = JSON.parse(savedOperations);
+        operations.forEach(op => {
+            if (op.type === 'addValues') {
+                op.values.forEach(value => {
+                    tree.addNode(value);
+                });
+            }
+        });
+        renderTree();  // Re-render the tree
+    }
+}
+window.onload = function() {
+    uiUpdater = new UIUpdater();
+    tree = new AVLTree(uiUpdater);
+    executeSavedOperations();
+    updateDimensions();
+    printTraversals()
 }
