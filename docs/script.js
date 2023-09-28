@@ -80,6 +80,8 @@ class AVLTree {
             console.log(`Left-Right Rotate on node with key ${node.key}`);
             node.left = this.leftRotate(node.left);
             this.leftRightRotations++;
+            this.leftRotations--;
+            this.rightRotations--;
             return this.rightRotate(node);
         }
 
@@ -87,6 +89,8 @@ class AVLTree {
             console.log(`Right-Left Rotate on node with key ${node.key}`);
             node.right = this.rightRotate(node.right);
             this.rightLeftRotations++;
+            this.leftRotations--;
+            this.rightRotations--;
             return this.leftRotate(node);
         }
         this.updateRotationCount();
