@@ -41,20 +41,6 @@
     <span>Made by <a href="https://github.com/VileEnd/avlTreeExam" target="_blank" class="text-blue-500 font-bold">Vileend</a></span>
 </div>
 <script src="script.js"></script>
-<script>
-    // Modify the dimensions to fit the device's size
-    function updateDimensions() {
-        const margin = {top: 20, right: 20, bottom: 20, left: 20},
-            width = window.innerWidth - margin.right - margin.left - 40,
-            height = window.innerHeight - margin.top - margin.bottom - 200;  // subtracting more to account for other UI elements
-
-        d3.select("#tree-container svg")
-            .attr("width", width + margin.right + margin.left)
-            .attr("height", height + margin.top + margin.bottom);
-    }
-
-    window.onresize = updateDimensions;  // Update dimensions when the window is resized
-</script>
 </body>
 
 </html>

@@ -243,5 +243,16 @@ function renderTree() {
             };
         });
     }
+function updateDimensions() {
+    const margin = {top: 20, right: 20, bottom: 20, left: 20},
+        width = window.innerWidth - margin.right - margin.left - 40,
+        height = window.innerHeight - margin.top - margin.bottom - 200;  // subtracting more to account for other UI elements
+
+    d3.select("#tree-container svg")
+        .attr("width", width + margin.right + margin.left)
+        .attr("height", height + margin.top + margin.bottom);
+}
+
+window.onresize = updateDimensions;
 
     updateLogMethods();
