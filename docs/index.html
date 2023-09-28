@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,32 +8,53 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 p-10">
-<div class="mb-4">
-    <input type="text" id="valueInput" placeholder="Enter a value" class="px-4 py-2 border border-gray-300 rounded" />
-</div>
-<div class="mb-4 space-x-4">
-    <button onclick="addValues()" class="px-4 py-2 font-bold text-white bg-blue-500 rounded">Add Values</button>
-    <button onclick="printTraversals()" class="px-4 py-2 font-bold text-white bg-blue-500 rounded">Print Traversals</button>
-    <button onclick="renderTree()" class="px-4 py-2 font-bold text-white bg-blue-500 rounded">Render Tree</button>
-</div>
-Rotation Counts:
-<div>
-    Left Rotations: <span id="left-rotations">0</span>
-</div>
-<div>
-    Right Rotations: <span id="right-rotations">0</span>
-</div>
-<div>
-    Left-Right Rotations: <span id="left-right-rotations">0</span>
-</div>
-<div>
-    Right-Left Rotations: <span id="right-left-rotations">0</span>
-</div>
 
-
-<div id="consoleLog" class="p-4 bg-white border border-gray-300 rounded mb-4"></div>
-<div id="tree-container"></div>
+<body class="bg-gray-200 p-4 sm:p-10">
+<div class="flex flex-col sm:flex-row space-y-6 sm:space-y-0 sm:space-x-6">
+    <!-- Main Content -->
+    <div class="flex-1">
+        <div class="mb-4">
+            <input type="text" id="valueInput" placeholder="Enter a value" class="px-4 py-2 w-full border border-gray-300 rounded" />
+        </div>
+        <div class="mb-4 flex space-x-4">
+            <button onclick="addValues()" class="flex-1 px-4 py-2 font-bold text-white bg-blue-500 rounded">Add Values</button>
+            <button onclick="printTraversals()" class="flex-1 px-4 py-2 font-bold text-white bg-blue-500 rounded">Print Traversals</button>
+            <button onclick="renderTree()" class="flex-1 px-4 py-2 font-bold text-white bg-blue-500 rounded">Render Tree</button>
+        </div>
+        <div id="consoleLog" class="p-4 bg-white border border-gray-300 rounded mb-4"></div>
+        <div id="tree-container" class="relative"></div>
+    </div>
+    <!-- Rotation Counts Block -->
+    <div class="w-full sm:w-1/4 bg-gray-300 p-4 rounded">
+        <h3 class="font-bold text-xl mb-4">Rotation Counts</h3>
+        <p>Left Rotations: <span id="left-rotations">0</span></p>
+        <p>Right Rotations: <span id="right-rotations">0</span></p>
+        <p>Left-Right Rotations: <span id="left-right-rotations">0</span></p>
+        <p>Right-Left Rotations: <span id="right-left-rotations">0</span></p>
+    </div>
+</div>
+<!-- Attribution Section -->
+<div class="fixed bottom-4 left-4 flex items-center space-x-2">
+    <a href="https://github.com/VileEnd/avlTreeExam" target="_blank">
+        <img src="https://github.githubassets.com/images/modules/logos_page/Octocat.png" alt="GitHub" style="width:32px;height:32px;opacity:0.7;">
+    </a>
+    <span>Made by <a href="https://github.com/VileEnd/avlTreeExam" target="_blank" class="text-blue-500 font-bold">Vileend</a></span>
+</div>
 <script src="script.js"></script>
+<script>
+    // Modify the dimensions to fit the device's size
+    function updateDimensions() {
+        const margin = {top: 20, right: 20, bottom: 20, left: 20},
+            width = window.innerWidth - margin.right - margin.left - 40,
+            height = window.innerHeight - margin.top - margin.bottom - 200;  // subtracting more to account for other UI elements
+
+        d3.select("#tree-container svg")
+            .attr("width", width + margin.right + margin.left)
+            .attr("height", height + margin.top + margin.bottom);
+    }
+
+    window.onresize = updateDimensions;  // Update dimensions when the window is resized
+</script>
 </body>
+
 </html>
