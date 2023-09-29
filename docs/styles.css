@@ -2,3 +2,24 @@ body {
     font-family: Arial, sans-serif;
     padding: 20px;
 }
+svg{
+    display: block;
+    margin: auto;
+}
+
+.node circle{
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 3px;
+}
+
+.node text{ font: 12px sans-serif; }
+
+.link{
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
+}
+.path.link {
+    stroke: red;
+}

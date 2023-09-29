@@ -179,6 +179,15 @@ function addValues() {
     }
 }
 let i = 0;
+function collapse(d) {
+    if (d.children) {
+        d._children = d.children
+        d._children.forEach(collapse)
+        d.children = null;
+    }
+}
+
+
 function renderTree() {
     if (!tree.root) {
         alert('The tree is empty. Please add some nodes first.');
@@ -218,16 +227,22 @@ function renderTree() {
         nodes.forEach(d => d.y = d.depth * 100);
 
         const node = svg.selectAll('g.node')
-            .data(nodes, d => d.id || (d.id = ++i));
+            .data(nodes, function (d) {
+                return d.id || (d.id = ++i);
+            });
 
         const nodeEnter = node.enter().append('g')
             .attr('class', 'node')
-            .attr("transform", d => `translate(${source.y0},${source.x0})`);
+            .attr("transform", function (d) {
+                return "translate(" + source.y0 + "," + source.x0 + ")";
+            })
+            .on('click', click);
 
         nodeEnter.append('circle')
             .attr('class', 'node')
             .attr('r', 1e-6)
-            .style("fill", d => d._children ? "lightsteelblue" : "#fff");
+            .style("fill", d => d._children ? "lightsteelblue" : "#a09393")
+            .attr("stroke", "#002bc5")
 
         nodeEnter.append('text')
             .attr("dy", ".35em")
@@ -243,7 +258,7 @@ function renderTree() {
 
         nodeUpdate.select('circle.node')
             .attr('r', 10)
-            .style("fill", d => d._children ? "lightsteelblue" : "#fff")
+            .style("fill", d => d._children ? "green" : "#fff")
             .attr('cursor', 'pointer');
 
         const nodeExit = node.exit().transition()
@@ -271,7 +286,10 @@ function renderTree() {
 
         linkUpdate.transition()
             .duration(duration)
-            .attr('d', d => diagonal(d, d.parent));
+            .attr('d', d => diagonal(d, d.parent))
+            .attr("fill", "none")
+            .style('stroke', 'lightsteelblue')
+            .attr("stroke-width", 2)
 
         link.exit().transition()
             .duration(duration)
@@ -294,6 +312,22 @@ function renderTree() {
             return path;
         }
     }
+    function click(d) {
+        console.log('Node clicked:', d);
+        console.log('Children before:', d.children);
+        console.log('_Children before:', d._children);
+        if (d.children) {
+            d._children = d.children;
+            d.children = null;
+        } else {
+            d.children = d._children;
+            d._children = null;
+        }
+        console.log('Children after:', d.children);
+        console.log('_Children after:', d._children);
+        update(d);
+    }
+    update(rootHierarchy)
 }
 function updateDimensions() {
     const margin = {top: 20, right: 20, bottom: 20, left: 20},
