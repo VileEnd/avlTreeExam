@@ -26,13 +26,22 @@
         </div>
         <div id="tree-container" class="relative"></div>
     </div>
-    <!-- Rotation Counts Block -->
-    <div class="w-full sm:w-1/4 bg-gray-300 p-4 rounded">
-        <h3 class="font-bold text-xl mb-4">Rotation Counts</h3>
-        <p>Left Rotations: <span id="left-rotations">0</span></p>
-        <p>Right Rotations: <span id="right-rotations">0</span></p>
-        <p>Left-Right Rotations: <span id="left-right-rotations">0</span></p>
-        <p>Right-Left Rotations: <span id="right-left-rotations">0</span></p>
+    <!-- Rotation Counts and Tree Stats Block -->
+    <div class="flex flex-col w-full sm:w-1/4 space-y-6 sm:space-y-0 bg-gray-300 p-4 rounded">
+        <!-- Rotation Counts Block -->
+        <div>
+            <h3 class="font-bold text-xl mb-4">Rotation Counts</h3>
+            <p>Left Rotations: <span id="left-rotations">0</span></p>
+            <p>Right Rotations: <span id="right-rotations">0</span></p>
+            <p>Left-Right Rotations: <span id="left-right-rotations">0</span></p>
+            <p>Right-Left Rotations: <span id="right-left-rotations">0</span></p>
+        </div>
+        <!-- Tree Stats Block -->
+        <div>
+            <h3 class="font-bold text-xl mb-4">Tree Stats</h3>
+            <p>Tree Depth: <span id="tree-depth">0</span></p>
+            <p>Tree Complexity (number of nodes): <span id="tree-complexity">0</span></p>
+        </div>
     </div>
 </div>
 <!-- Attribution Section -->

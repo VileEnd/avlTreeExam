@@ -149,6 +149,24 @@ class AVLTree {
             logger(node.key + " ");  // Visit node
         }
     }
+
+    getDepth(node = this.root) {
+        if (node == null) {
+            return 0;
+        }
+        const leftDepth = this.getDepth(node.left);
+        const rightDepth = this.getDepth(node.right);
+        return Math.max(leftDepth, rightDepth) + 1;
+    }
+
+    getComplexity(node = this.root) {
+        if (node == null) {
+            return 0;
+        }
+        const leftComplexity = this.getComplexity(node.left);
+        const rightComplexity = this.getComplexity(node.right);
+        return leftComplexity + rightComplexity + 1;
+    }
 }
 
 
@@ -340,7 +358,13 @@ function updateDimensions() {
 }
 
 window.onresize = updateDimensions;
+function updateTreeStats() {
+    const treeDepth = tree.getDepth();
+    const treeComplexity = tree.getComplexity();
 
+    document.getElementById('tree-depth').textContent = treeDepth;
+    document.getElementById('tree-complexity').textContent = treeComplexity;
+}
 function printTraversals() {
     let preOrderResult = [];
     let inOrderResult = [];
@@ -349,8 +373,8 @@ function printTraversals() {
     tree.printPreOrder(undefined,(value) => preOrderResult.push(value));
     tree.printInOrder(undefined,(value) => inOrderResult.push(value));
     tree.printPostOrder(undefined,(value) => postOrderResult.push(value));
-
     updateTraversalResults(preOrderResult, inOrderResult, postOrderResult);
+    updateTreeStats();
 }
 
 function updateTraversalResults(preOrder, inOrder, postOrder) {
@@ -390,5 +414,6 @@ window.onload = function() {
     tree = new AVLTree(uiUpdater);
     executeSavedOperations();
     updateDimensions();
-    printTraversals()
+    printTraversals();
+    updateTreeStats();
 }
