@@ -93,7 +93,7 @@ class AVLTree {
         } else if (key > node.key) {
             node.right = this.insert(node.right, key);
         } else {
-            return node;  // Duplicates are not allowed
+            return node;
         }
 
         node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
@@ -128,25 +128,25 @@ class AVLTree {
 
     printPreOrder(node = this.root, logger = console.log) {
         if (node) {
-            logger(node.key);  // Visit node
-            this.printPreOrder(node.left, logger);  // Visit left subtree
-            this.printPreOrder(node.right, logger);  // Visit right subtree
+            logger(node.key);
+            this.printPreOrder(node.left, logger);
+            this.printPreOrder(node.right, logger);
         }
     }
 
     printInOrder(node = this.root, logger = console.log) {
         if (node) {
-            this.printInOrder(node.left, logger);  // Visit left subtree
-            logger(node.key + " ");  // Visit node
-            this.printInOrder(node.right, logger);  // Visit right subtree
+            this.printInOrder(node.left, logger);
+            logger(node.key + " ");
+            this.printInOrder(node.right, logger);
         }
     }
 
     printPostOrder(node = this.root, logger = console.log) {
         if (node) {
-            this.printPostOrder(node.left, logger);  // Visit left subtree
-            this.printPostOrder(node.right, logger);  // Visit right subtree
-            logger(node.key + " ");  // Visit node
+            this.printPostOrder(node.left, logger);
+            this.printPostOrder(node.right, logger);
+            logger(node.key + " ");
         }
     }
 
@@ -216,7 +216,6 @@ function renderTree() {
         width = 960 - margin.right - margin.left,
         height = 500 - margin.top - margin.bottom;
 
-    // Clear any existing SVG before rendering the new tree
     d3.select("#tree-container").select("svg").remove();
 
     const svg = d3.select("#tree-container")
@@ -350,8 +349,7 @@ function renderTree() {
 function updateDimensions() {
     const margin = {top: 20, right: 20, bottom: 20, left: 20},
         width = window.innerWidth - margin.right - margin.left - 40,
-        height = window.innerHeight - margin.top - margin.bottom - 200;  // subtracting more to account for other UI elements
-
+        height = window.innerHeight - margin.top - margin.bottom - 200;
     d3.select("#tree-container svg")
         .attr("width", width + margin.right + margin.left)
         .attr("height", height + margin.top + margin.bottom);
@@ -388,10 +386,9 @@ function resetTree() {
     document.getElementById('resultBox').value = '';
     document.getElementById('valueInput').value = '';
 
-    // Remove the existing SVG to clear the displayed tree
     d3.select("#tree-container").select("svg").remove();
 
-    // Clear the operations from local storage
+
     localStorage.removeItem('operations');
 }
 
@@ -406,7 +403,7 @@ function executeSavedOperations() {
                 });
             }
         });
-        renderTree();  // Re-render the tree
+        renderTree();
     }
 }
 window.onload = function() {
