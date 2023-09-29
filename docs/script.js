@@ -265,6 +265,8 @@ function renderTree() {
             .attr("dy", ".35em")
             .attr("x", d => d.children || d._children ? -13 : 13)
             .attr("text-anchor", d => d.children || d._children ? "end" : "start")
+            .style("font-size", "20px")
+            .attr("paint-order", "stroke")
             .text(d => d.data.key);
 
         const nodeUpdate = nodeEnter.merge(node);

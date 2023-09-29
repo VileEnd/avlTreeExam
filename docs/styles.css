@@ -2,24 +2,53 @@ body {
     font-family: Arial, sans-serif;
     padding: 20px;
 }
-svg{
+
+svg {
     display: block;
     margin: auto;
 }
 
-.node circle{
-    fill: #fff;
+.node circle {
+    fill: #e01c1c;
     stroke: steelblue;
     stroke-width: 3px;
 }
 
-.node text{ font: 12px sans-serif; }
+.node text {
+    font: 12px sans-serif;
+}
 
-.link{
+.link {
     fill: none;
     stroke: #ccc;
     stroke-width: 2px;
 }
+
 .path.link {
     stroke: red;
+}
+
+.dark .bg-gray-200 {
+    background-color: #3c4256;
+}
+.dark .bg-gray-300 {
+    background-color: #303544;
+}
+.dark .bg-blue-500 {
+    background-color: #3182ce;
+}
+.dark .bg-red-500 {
+    background-color: #e53e3e;
+}
+.dark .text-white {
+    color: #e2e8f0;
+}
+.dark .border-gray-300 {
+    border-color: #4a5568;
+}
+.dark .focus\:ring-blue-500 {
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.5);
+}
+.dark {
+    background-color: #2D3748;
 }
