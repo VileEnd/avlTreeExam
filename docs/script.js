@@ -199,39 +199,102 @@ function renderTree() {
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    const treeLayout = d3.tree().size([width, height]);
+    const treemap = d3.tree().size([height, width]);
 
     const rootHierarchy = d3.hierarchy(tree.root, d => [d.left, d.right].filter(d => d));
-    const treeData = treeLayout(rootHierarchy);
+    rootHierarchy.x0 = height / 2;
+    rootHierarchy.y0 = 0;
 
-    const nodes = svg.selectAll("g.node")
-        .data(treeData.descendants(), d => d.id || (d.id = ++i));
+    let i = 0;
+    const duration = 750;
 
-    const nodeEnter = nodes.enter().append("g")
-        .attr("class", "node")
-        .attr("transform", d => `translate(${d.x},${d.y})`);
+    update(rootHierarchy);
 
-    nodeEnter.append("circle")
-        .attr("r", 10)
-        .style("fill", "#fff");
+    function update(source) {
+        const treeData = treemap(rootHierarchy);
+        const nodes = treeData.descendants(),
+            links = treeData.descendants().slice(1);
 
-    nodeEnter.append("text")
-        .attr("dy", ".35em")
-        .attr("x", d => d.children ? -20 : 20)
-        .attr("text-anchor", d => d.children ? "end" : "start")
-        .text(d => d.data.key);
+        nodes.forEach(d => d.y = d.depth * 100);
 
-    const links = svg.selectAll("path.link")
-        .data(treeData.links(), d => d.target.id);
+        const node = svg.selectAll('g.node')
+            .data(nodes, d => d.id || (d.id = ++i));
 
-    links.enter().insert("path", "g")
-        .attr("class", "link")
-        .attr("d", d3.linkVertical()
-            .x(d => d.x)
-            .y(d => d.y)
-        );
+        const nodeEnter = node.enter().append('g')
+            .attr('class', 'node')
+            .attr("transform", d => `translate(${source.y0},${source.x0})`);
+
+        nodeEnter.append('circle')
+            .attr('class', 'node')
+            .attr('r', 1e-6)
+            .style("fill", d => d._children ? "lightsteelblue" : "#fff");
+
+        nodeEnter.append('text')
+            .attr("dy", ".35em")
+            .attr("x", d => d.children || d._children ? -13 : 13)
+            .attr("text-anchor", d => d.children || d._children ? "end" : "start")
+            .text(d => d.data.key);
+
+        const nodeUpdate = nodeEnter.merge(node);
+
+        nodeUpdate.transition()
+            .duration(duration)
+            .attr("transform", d => `translate(${d.x},${d.y})`);
+
+        nodeUpdate.select('circle.node')
+            .attr('r', 10)
+            .style("fill", d => d._children ? "lightsteelblue" : "#fff")
+            .attr('cursor', 'pointer');
+
+        const nodeExit = node.exit().transition()
+            .duration(duration)
+            .attr("transform", d => `translate(${source.x},${source.y})`)
+            .remove();
+
+        nodeExit.select('circle')
+            .attr('r', 1e-6);
+
+        nodeExit.select('text')
+            .style('fill-opacity', 1e-6);
+
+        const link = svg.selectAll('path.link')
+            .data(links, d => d.id);
+
+        const linkEnter = link.enter().insert('path', "g")
+            .attr("class", "link")
+            .attr('d', d => {
+                const o = {x: source.x0, y: source.y0};
+                return diagonal(o, o);
+            });
+
+        const linkUpdate = linkEnter.merge(link);
+
+        linkUpdate.transition()
+            .duration(duration)
+            .attr('d', d => diagonal(d, d.parent));
+
+        link.exit().transition()
+            .duration(duration)
+            .attr('d', d => {
+                const o = {x: source.x, y: source.y};
+                return diagonal(o, o);
+            })
+            .remove();
+
+        nodes.forEach(d => {
+            d.x0 = d.x;
+            d.y0 = d.y;
+        });
+
+        function diagonal(s, d) {
+            const path = `M ${s.x} ${s.y}
+                C ${(s.x + d.x) / 2} ${s.y},
+                ${(s.x + d.x) / 2} ${d.y},
+                ${d.x} ${d.y}`;
+            return path;
+        }
+    }
 }
-
 function updateDimensions() {
     const margin = {top: 20, right: 20, bottom: 20, left: 20},
         width = window.innerWidth - margin.right - margin.left - 40,
