@@ -4,6 +4,8 @@ class AVLNode {
         this.height = 1;
         this.left = null;
         this.right = null;
+        this.depth = 0;
+        this.balance = 0;
     }
 }
 
@@ -85,6 +87,17 @@ class AVLTree {
     getBalance(node) {
         return node ? this.height(node.left) - this.height(node.right) : 0;
     }
+    updateNodeDepthAndBalance(node){
+        if (node){
+            node.depth = Math.max(this.getNodeDepth(node.left), this.getNodeDepth(node.right))+1
+            node.balance = this.getBalance(node)
+            this.updateNodeDepthAndBalance(node.left);
+            this.updateNodeDepthAndBalance(node.right)
+        }
+    }
+    getNodeDepth(node){
+        return node ? node.depth : -1
+    }
 
     insert(node, key) {
         if (!node) return new AVLNode(key);
@@ -118,7 +131,7 @@ class AVLTree {
             this.uiUpdater.incrementRightLeftRotations()
             return this.leftRotate(node);
         }
-
+        this.updateNodeDepthAndBalance(node)
         return node;
     }
 
@@ -167,12 +180,14 @@ class AVLTree {
         const rightComplexity = this.getComplexity(node.right);
         return leftComplexity + rightComplexity + 1;
     }
+
 }
 
 
 let uiUpdater = new UIUpdater();
 let tree = new AVLTree(uiUpdater);
 let allNumbers = [];
+
 
 
 function addValues() {
@@ -265,9 +280,9 @@ function renderTree() {
             .attr("dy", ".35em")
             .attr("x", d => d.children || d._children ? -13 : 13)
             .attr("text-anchor", d => d.children || d._children ? "end" : "start")
-            .style("font-size", "20px")
+            .style("font-size", "15px")
             .attr("paint-order", "stroke")
-            .text(d => d.data.key);
+            .text(d => d.data.key + " (Depth: " + d.data.depth + ",Balance: " + d.data.balance+ ")");
 
         const nodeUpdate = nodeEnter.merge(node);
 
