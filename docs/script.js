@@ -223,7 +223,6 @@ function collapse(d) {
 
 function renderTree() {
     if (!tree.root) {
-        alert('The tree is empty. Please add some nodes first.');
         return;
     }
 
