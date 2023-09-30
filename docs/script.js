@@ -461,10 +461,3 @@ window.onload = function() {
     printTraversals();
     updateTreeStats();
 }
-document.getElementById("valueInput").addEventListener("keydown", function(event) {
-    if (event.key === "Enter" && !event.target.value) {
-        event.preventDefault();
-    } else if (event.key === "Enter") {
-        addValues();
-    }
-});
