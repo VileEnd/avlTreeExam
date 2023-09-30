@@ -20,8 +20,8 @@
                     id="valueInput"
                     placeholder="Enter a value"
                     class="px-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-        </div>
+                    onkeydown="if (event.keyCode === 13 && !event.target.value) return false; else if (event.keyCode === 13) addValues();"
+            />        </div>
         <div class="mb-4 flex space-x-4">
             <button onclick="addValues()" class="flex-1 px-4 py-2 font-bold text-white bg-blue-500 rounded">Add Values</button>
             <button onclick="printTraversals()" class="flex-1 px-4 py-2 font-bold text-white bg-blue-500 rounded">Print Traversals</button>
