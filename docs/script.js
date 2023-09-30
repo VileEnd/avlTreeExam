@@ -227,18 +227,22 @@ function renderTree() {
         return;
     }
 
-    const margin = {top: 20, right: 120, bottom: 20, left: 120},
-        width = 960 - margin.right - margin.left,
-        height = 500 - margin.top - margin.bottom;
+    const margin = {top: 20, right: 40, bottom: 150, left: 10},  // Adjust left margin here
+        container = d3.select("#tree-container").node().getBoundingClientRect(),  // Get dimensions of #tree-container
+        width = container.width - margin.right - margin.left,  // Use container dimensions
+        height = container.height - margin.top - margin.bottom;
 
     d3.select("#tree-container").select("svg").remove();
 
     const svg = d3.select("#tree-container")
         .append("svg")
-        .attr("width", width + margin.right + margin.left)
+        .attr("width", width + margin.right + margin.left)  /* this width might need to be larger */
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+
 
     const treemap = d3.tree().size([height, width]);
 
@@ -277,18 +281,43 @@ function renderTree() {
             .attr("stroke", "#002bc5")
 
         nodeEnter.append('text')
-            .attr("dy", ".35em")
+            .attr("dy", "-1em")  // Moved this up a bit
             .attr("x", d => d.children || d._children ? -13 : 13)
             .attr("text-anchor", d => d.children || d._children ? "end" : "start")
             .style("font-size", "15px")
             .attr("paint-order", "stroke")
-            .text(d => d.data.key + " (Depth: " + d.data.depth + ",Balance: " + d.data.balance+ ")");
+            .text(d => d.data.key);
+
+        nodeEnter.append('text')
+            .attr("dy", "1em")  // Adjusted to move text down but not too far
+            .attr("x", d => d.children || d._children ? -13 : 13)  // Updated x attribute
+            .attr("text-anchor", d => d.children || d._children ? "end" : "start")  // Added text-anchor
+            .style("font-size", "10px")
+            .text(d => `Depth: ${d.depth}`);
+
+        nodeEnter.append('text')
+            .attr("dy", "2em")  // Increased value to move text further down to avoid overlap
+            .attr("x", d => d.children || d._children ? -13 : 13)  // Updated x attribute
+            .attr("text-anchor", d => d.children || d._children ? "end" : "start")  // Added text-anchor
+            .style("font-size", "10px")
+            .attr("paint-order", "stroke")
+            .text(d => `Balance: ${tree.getBalance(d.data)}`);
 
         const nodeUpdate = nodeEnter.merge(node);
 
         nodeUpdate.transition()
             .duration(duration)
             .attr("transform", d => `translate(${d.x},${d.y})`);
+
+        nodeUpdate.selectAll('text')
+            .attr("x", d => d.children || d._children ? -13 : 13)
+            .attr("dy", (d, i) => {
+                switch(i) {
+                    case 0: return "-.5em";
+                    case 1: return "1em";
+                    case 2: return "2em";
+                }
+            });
 
         nodeUpdate.select('circle.node')
             .attr('r', 10)
@@ -423,6 +452,7 @@ function executeSavedOperations() {
         renderTree();
     }
 }
+window.addEventListener('resize', renderTree);
 window.onload = function() {
     uiUpdater = new UIUpdater();
     tree = new AVLTree(uiUpdater);

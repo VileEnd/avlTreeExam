@@ -2,31 +2,13 @@ body {
     font-family: Arial, sans-serif;
     padding: 20px;
 }
-
-svg {
-    display: block;
-    margin: auto;
+#tree-container {
+    min-height: 500px;
+    position: relative;
+    max-width: 100%;  /* Ensure the container doesn't stretch beyond its parent */
+    overflow-x: auto; /* Enable horizontal scrolling */
 }
 
-.node circle {
-    fill: #e01c1c;
-    stroke: steelblue;
-    stroke-width: 3px;
-}
-
-.node text {
-    font: 12px sans-serif;
-}
-
-.link {
-    fill: none;
-    stroke: #ccc;
-    stroke-width: 2px;
-}
-
-.path.link {
-    stroke: red;
-}
 
 .dark .bg-gray-200 {
     background-color: #3c4256;
