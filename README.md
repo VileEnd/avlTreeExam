@@ -1,28 +1,28 @@
-# AVL Tree 🌲
+# 🌲 AVL Tree Examination 🌲
 
-Java implementation of an AVL Tree. AVL Tree is a self-balancing Binary Search Tree (BST).
+[![pages-build-deployment](https://github.com/VileEnd/avlTreeExam/actions/workflows/pages/pages-build-deployment/badge.svg?branch=main)](https://github.com/VileEnd/avlTreeExam/actions/workflows/pages/pages-build-deployment)
 
-## Features
+This repository encapsulates an AVL tree implementation in both JavaScript and Java. It provides a visual representation through a web interface, allowing users to interact with the AVL tree dynamically.
 
-- Basic AVL operations: insertion and rotations.
-- Outputs rotation counts.
-- Outputs Prefix, Infix, Postfix expressions.
+## 🎯 Features 🎯
+- **Node Insertion**: Add nodes and observe the tree balance dynamically.
+- **Rotations**: Supports Right, Left, Right-Left, and Left-Right rotations.
+- **Tree Traversals**: Displays Pre-order, In-order, Post-order traversals.
+- **Rotation Count Tracking**: Tracks and displays the count of each rotation type.
+- **Tree Statistics**: Shows the depth and balance of the tree.
 
-## Usage
+## 💡 Future Enhancements 💡
+- **Deletion**: Implement node deletion while maintaining balance.
+- **Search Functionality**: Add a search bar to find nodes.
+- **Performance Metrics**: Display metrics like time taken for operations, comparisons made, etc.
+- **Responsive Design**: Enhance the UI to be responsive for better mobile support.
 
-1. Clone the repo.
-2. Open `AVLTree.java` in your Java IDE.
-3. Modify `values` array in `main` method for different input.
-4. Run `AVLTree.java` to see results in console.
+## 🚀 Usage 🚀
+- Web Interface: Open the `index.html` file in a web browser.
+- Java Implementation: Run the Java code to see AVL tree operations in the console.
 
-```java
-public static void main(String[] args) {
-    AVLTree tree = new AVLTree();
-    // your values should replace values
-    int[] values = {39, 7, 11, 72, 50, -17, 71, 70, 68, 14, 9, 94, 96};
-}
-```
+## 🤝 Contributing 🤝
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-## Output
-
-Output shows tree traversals and rotation counts, providing insight into AVL Tree balancing.
+## 📜 License 📜
+MIT
