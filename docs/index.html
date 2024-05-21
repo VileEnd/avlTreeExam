@@ -21,16 +21,16 @@
                     <li>
                         <button onclick="addValues()" class="lg:hover:text-[#007bff] text-[#007bff] block font-semibold text-[15px]">Add Values</button>
                     </li>
-                    <li>
+                    <li class="max-lg:border-b max-lg:py-3 px-3">
                         <button onclick="deleteValue()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Delete Value</button>
                     </li>
-                    <li>
+                    <li class="max-lg:border-b max-lg:py-3 px-3">
                         <button onclick="searchValue()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Search Value</button>
                     </li>
-                    <li>
+                    <li class="max-lg:border-b max-lg:py-3 px-3">
                         <button onclick="resetTree()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Reset Tree</button>
                     </li>
-                    <li>
+                    <li class="max-lg:border-b max-lg:py-3 px-3">
                         <button onclick="undoLastOperation()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Undo Last Operation</button>
                     </li>
                 </ul>
@@ -98,9 +98,9 @@
             </div>
         </div>
         <!-- History Section -->
-        <div class="lg:w-1/5 p-4 border-l border-gray-300 bg-white hidden lg:block">
-            <div class="mt-16">
-                <h2 class="text-xl font-bold mb-2">History</h2>
+        <div class="lg:w-3/5 p-4 border-l border-gray-300 bg-white">
+            <div class="">
+                <h2 class="text-xl font-bold mb-2">Operations</h2>
                 <ul id="history-list" class="space-y-2"></ul>
             </div>
         </div>

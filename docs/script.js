@@ -344,7 +344,6 @@ let uiUpdater = new UIUpdater();
 let tree = new AVLTree(uiUpdater);
 
 function addValues() {
-    d3.select("#tree-container").select("svg").remove();
     const valueInput = document.getElementById('valueInput');
     const values = valueInput.value.split(/[\s,]+/).map(v => parseInt(v, 10)).filter(v => !isNaN(v));
     if (values.length > 0) {
@@ -362,7 +361,6 @@ function addValues() {
 }
 
 function deleteValue() {
-    d3.select("#tree-container").select("svg").remove();
     const valueInput = document.getElementById('valueInput');
     const value = parseInt(valueInput.value, 10);
     if (!isNaN(value)) {
@@ -385,6 +383,8 @@ function updateOperations(type, values) {
 
 function undoLastOperation() {
     tree.undoLastOperation();
+    renderTree();
+    printTraversals();
 }
 
 function renderTree() {
@@ -582,7 +582,52 @@ document.addEventListener('DOMContentLoaded', function () {
         buttons.classList.toggle('hidden');
         icon.style.transform = buttons.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(-90deg)';
     });
+    if (!localStorage.getItem('visited')) {
+        showWelcomeMessage();
+    } else {
+        loadZoomState();
+    }
 });
+
+function showWelcomeMessage() {
+    const modal = document.createElement('div');
+    modal.classList.add('fixed', 'inset-0', 'bg-gray-800', 'bg-opacity-50', 'flex', 'items-center', 'justify-center', 'z-50');
+    modal.innerHTML = `
+        <div class="bg-white p-6 rounded shadow-lg text-center max-w-md mx-auto">
+            <h2 class="text-xl font-bold mb-4">Welcome to the AVL Tree Visualizer!</h2>
+            <p class="mb-4">This tool allows you to visualize AVL Trees. You can add, delete, search, and reset nodes to see how the tree balances itself.</p>
+            <p class="mb-4">Use the mouse scroll to zoom in and out, and drag to pan the view. On touch devices, use pinch gestures to zoom and swipe to pan.</p>
+            <p class="mb-4">You can see the processes involved in balancing the tree, including rotations, comparisons, and operation time. The search path and balancing actions are visually highlighted.</p>
+            <button id="welcome-ok" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">OK</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('welcome-ok').addEventListener('click', () => {
+        modal.remove();
+        localStorage.setItem('visited', 'true');
+        loadZoomState();
+    });
+}
+
+
+function saveZoomState() {
+    const zoomState = {
+        transform: currentTransform,
+        zoomLevel: zoomLevel
+    };
+    localStorage.setItem('zoomState', JSON.stringify(zoomState));
+}
+
+function loadZoomState() {
+    const savedZoomState = localStorage.getItem('zoomState');
+    if (savedZoomState) {
+        const { transform, zoomLevel: savedZoomLevel } = JSON.parse(savedZoomState);
+        currentTransform = d3.zoomIdentity.translate(transform.x, transform.y).scale(transform.k);
+        zoomLevel = savedZoomLevel;
+    }
+    renderTree();
+};
 
 function updateTreeStats() {
     document.getElementById('tree-depth').textContent = tree.getDepth();
@@ -612,6 +657,7 @@ function resetTree() {
     document.getElementById('resultBox').value = '';
     document.getElementById('valueInput').value = '';
     localStorage.removeItem('operations');
+    localStorage.removeItem('zoomState');
     d3.select("#tree-container").select("svg").remove();
     tree.history = [];
     tree.updateHistory();
