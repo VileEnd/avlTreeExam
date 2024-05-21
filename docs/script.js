@@ -26,20 +26,14 @@ class UIUpdater {
         this.rightRotations++;
         this.updateRotationCount();
     }
-    decrementLeftRightRotation(){
-        this.leftRotations --;
-        this.rightRotations--;
-    }
 
     incrementLeftRightRotations() {
         this.leftRightRotations++;
-        this.decrementLeftRightRotation();
         this.updateRotationCount();
     }
 
     incrementRightLeftRotations() {
         this.rightLeftRotations++;
-        this.decrementLeftRightRotation()
         this.updateRotationCount();
     }
 
@@ -49,13 +43,12 @@ class UIUpdater {
         document.getElementById('left-right-rotations').textContent = this.leftRightRotations;
         document.getElementById('right-left-rotations').textContent = this.rightLeftRotations;
     }
-
 }
 
 class AVLTree {
     constructor(uiUpdater) {
         this.root = null;
-        this.uiUpdater = uiUpdater
+        this.uiUpdater = uiUpdater;
     }
 
     height(node) {
@@ -64,39 +57,39 @@ class AVLTree {
 
     rightRotate(y) {
         const x = y.left;
-        const T = x.right;
+        y.left = x.right;
         x.right = y;
-        y.left = T;
         y.height = Math.max(this.height(y.left), this.height(y.right)) + 1;
         x.height = Math.max(this.height(x.left), this.height(x.right)) + 1;
-        this.uiUpdater.incrementRightRotations()
+        this.uiUpdater.incrementRightRotations();
         return x;
     }
 
     leftRotate(x) {
         const y = x.right;
-        const T = y.left;
+        x.right = y.left;
         y.left = x;
-        x.right = T;
         x.height = Math.max(this.height(x.left), this.height(x.right)) + 1;
         y.height = Math.max(this.height(y.left), this.height(y.right)) + 1;
-        this.uiUpdater.incrementLeftRotations()
+        this.uiUpdater.incrementLeftRotations();
         return y;
     }
 
     getBalance(node) {
         return node ? this.height(node.left) - this.height(node.right) : 0;
     }
-    updateNodeDepthAndBalance(node){
-        if (node){
-            node.depth = Math.max(this.getNodeDepth(node.left), this.getNodeDepth(node.right))+1
-            node.balance = this.getBalance(node)
+
+    updateNodeDepthAndBalance(node) {
+        if (node) {
+            node.depth = Math.max(this.getNodeDepth(node.left), this.getNodeDepth(node.right)) + 1;
+            node.balance = this.getBalance(node);
             this.updateNodeDepthAndBalance(node.left);
-            this.updateNodeDepthAndBalance(node.right)
+            this.updateNodeDepthAndBalance(node.right);
         }
     }
-    getNodeDepth(node){
-        return node ? node.depth : -1
+
+    getNodeDepth(node) {
+        return node ? node.depth : -1;
     }
 
     insert(node, key) {
@@ -122,16 +115,17 @@ class AVLTree {
 
         if (balance > 1 && key > node.left.key) {
             node.left = this.leftRotate(node.left);
-            this.uiUpdater.incrementLeftRightRotations()
+            this.uiUpdater.incrementLeftRightRotations();
             return this.rightRotate(node);
         }
 
         if (balance < -1 && key < node.right.key) {
             node.right = this.rightRotate(node.right);
-            this.uiUpdater.incrementRightLeftRotations()
+            this.uiUpdater.incrementRightLeftRotations();
             return this.leftRotate(node);
         }
-        this.updateNodeDepthAndBalance(node)
+
+        this.updateNodeDepthAndBalance(node);
         return node;
     }
 
@@ -180,15 +174,10 @@ class AVLTree {
         const rightComplexity = this.getComplexity(node.right);
         return leftComplexity + rightComplexity + 1;
     }
-
 }
-
 
 let uiUpdater = new UIUpdater();
 let tree = new AVLTree(uiUpdater);
-let allNumbers = [];
-
-
 
 function addValues() {
     const valueInput = document.getElementById('valueInput');
@@ -200,48 +189,43 @@ function addValues() {
 
         let operations = localStorage.getItem('operations');
         operations = operations ? JSON.parse(operations) : [];
-        operations.push({type: 'addValues', values: values});
+        operations.push({ type: 'addValues', values: values });
         localStorage.setItem('operations', JSON.stringify(operations));
 
         valueInput.value = '';
         renderTree();
-        printTraversals()
-
+        printTraversals();
     } else {
         alert('Please enter a valid number or list of numbers, separated by commas or spaces.');
     }
 }
-let i = 0;
+
 function collapse(d) {
     if (d.children) {
-        d._children = d.children
-        d._children.forEach(collapse)
+        d._children = d.children;
+        d._children.forEach(collapse);
         d.children = null;
     }
 }
-
 
 function renderTree() {
     if (!tree.root) {
         return;
     }
 
-    const margin = {top: 20, right: 40, bottom: 150, left: 10},  // Adjust left margin here
-        container = d3.select("#tree-container").node().getBoundingClientRect(),  // Get dimensions of #tree-container
-        width = container.width - margin.right - margin.left,  // Use container dimensions
+    const margin = { top: 20, right: 40, bottom: 150, left: 10 },
+        container = d3.select("#tree-container").node().getBoundingClientRect(),
+        width = container.width - margin.right - margin.left,
         height = container.height - margin.top - margin.bottom;
 
     d3.select("#tree-container").select("svg").remove();
 
     const svg = d3.select("#tree-container")
         .append("svg")
-        .attr("width", width + margin.right + margin.left)  /* this width might need to be larger */
+        .attr("width", width + margin.right + margin.left)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
-
 
     const treemap = d3.tree().size([height, width]);
 
@@ -262,25 +246,21 @@ function renderTree() {
         nodes.forEach(d => d.y = d.depth * 100);
 
         const node = svg.selectAll('g.node')
-            .data(nodes, function (d) {
-                return d.id || (d.id = ++i);
-            });
+            .data(nodes, d => d.id || (d.id = ++i));
 
         const nodeEnter = node.enter().append('g')
             .attr('class', 'node')
-            .attr("transform", function (d) {
-                return "translate(" + source.y0 + "," + source.x0 + ")";
-            })
+            .attr("transform", d => "translate(" + source.y0 + "," + source.x0 + ")")
             .on('click', click);
 
         nodeEnter.append('circle')
             .attr('class', 'node')
             .attr('r', 1e-6)
             .style("fill", d => d._children ? "lightsteelblue" : "#a09393")
-            .attr("stroke", "#002bc5")
+            .attr("stroke", "#002bc5");
 
         nodeEnter.append('text')
-            .attr("dy", "-1em")  // Moved this up a bit
+            .attr("dy", "-1em")
             .attr("x", d => d.children || d._children ? -13 : 13)
             .attr("text-anchor", d => d.children || d._children ? "end" : "start")
             .style("font-size", "15px")
@@ -288,16 +268,16 @@ function renderTree() {
             .text(d => d.data.key);
 
         nodeEnter.append('text')
-            .attr("dy", "1em")  // Adjusted to move text down but not too far
-            .attr("x", d => d.children || d._children ? -13 : 13)  // Updated x attribute
-            .attr("text-anchor", d => d.children || d._children ? "end" : "start")  // Added text-anchor
+            .attr("dy", "1em")
+            .attr("x", d => d.children || d._children ? -13 : 13)
+            .attr("text-anchor", d => d.children || d._children ? "end" : "start")
             .style("font-size", "10px")
             .text(d => `Depth: ${d.depth}`);
 
         nodeEnter.append('text')
-            .attr("dy", "2em")  // Increased value to move text further down to avoid overlap
-            .attr("x", d => d.children || d._children ? -13 : 13)  // Updated x attribute
-            .attr("text-anchor", d => d.children || d._children ? "end" : "start")  // Added text-anchor
+            .attr("dy", "2em")
+            .attr("x", d => d.children || d._children ? -13 : 13)
+            .attr("text-anchor", d => d.children || d._children ? "end" : "start")
             .style("font-size", "10px")
             .attr("paint-order", "stroke")
             .text(d => `Balance: ${tree.getBalance(d.data)}`);
@@ -311,7 +291,7 @@ function renderTree() {
         nodeUpdate.selectAll('text')
             .attr("x", d => d.children || d._children ? -13 : 13)
             .attr("dy", (d, i) => {
-                switch(i) {
+                switch (i) {
                     case 0: return "-.5em";
                     case 1: return "1em";
                     case 2: return "2em";
@@ -340,7 +320,7 @@ function renderTree() {
         const linkEnter = link.enter().insert('path', "g")
             .attr("class", "link")
             .attr('d', d => {
-                const o = {x: source.x0, y: source.y0};
+                const o = { x: source.x0, y: source.y0 };
                 return diagonal(o, o);
             });
 
@@ -351,12 +331,12 @@ function renderTree() {
             .attr('d', d => diagonal(d, d.parent))
             .attr("fill", "none")
             .style('stroke', 'lightsteelblue')
-            .attr("stroke-width", 2)
+            .attr("stroke-width", 2);
 
         link.exit().transition()
             .duration(duration)
             .attr('d', d => {
-                const o = {x: source.x, y: source.y};
+                const o = { x: source.x, y: source.y };
                 return diagonal(o, o);
             })
             .remove();
@@ -374,10 +354,8 @@ function renderTree() {
             return path;
         }
     }
+
     function click(d) {
-        console.log('Node clicked:', d);
-        console.log('Children before:', d.children);
-        console.log('_Children before:', d._children);
         if (d.children) {
             d._children = d.children;
             d.children = null;
@@ -385,14 +363,14 @@ function renderTree() {
             d.children = d._children;
             d._children = null;
         }
-        console.log('Children after:', d.children);
-        console.log('_Children after:', d._children);
         update(d);
     }
-    update(rootHierarchy)
+
+    update(rootHierarchy);
 }
+
 function updateDimensions() {
-    const margin = {top: 20, right: 20, bottom: 20, left: 20},
+    const margin = { top: 20, right: 20, bottom: 20, left: 20 },
         width = window.innerWidth - margin.right - margin.left - 40,
         height = window.innerHeight - margin.top - margin.bottom - 200;
     d3.select("#tree-container svg")
@@ -401,6 +379,7 @@ function updateDimensions() {
 }
 
 window.onresize = updateDimensions;
+
 function updateTreeStats() {
     const treeDepth = tree.getDepth();
     const treeComplexity = tree.getComplexity();
@@ -408,14 +387,15 @@ function updateTreeStats() {
     document.getElementById('tree-depth').textContent = treeDepth;
     document.getElementById('tree-complexity').textContent = treeComplexity;
 }
+
 function printTraversals() {
     let preOrderResult = [];
     let inOrderResult = [];
     let postOrderResult = [];
 
-    tree.printPreOrder(undefined,(value) => preOrderResult.push(value));
-    tree.printInOrder(undefined,(value) => inOrderResult.push(value));
-    tree.printPostOrder(undefined,(value) => postOrderResult.push(value));
+    tree.printPreOrder(undefined, value => preOrderResult.push(value));
+    tree.printInOrder(undefined, value => inOrderResult.push(value));
+    tree.printPostOrder(undefined, value => postOrderResult.push(value));
     updateTraversalResults(preOrderResult, inOrderResult, postOrderResult);
     updateTreeStats();
 }
@@ -424,6 +404,7 @@ function updateTraversalResults(preOrder, inOrder, postOrder) {
     const resultBox = document.getElementById('resultBox');
     resultBox.value = `Pre-order: ${preOrder}\nIn-order: ${inOrder.join(' ')}\nPost-order: ${postOrder.join(' ')}`;
 }
+
 function resetTree() {
     tree = new AVLTree(uiUpdater);
     uiUpdater = new UIUpdater();
@@ -432,7 +413,6 @@ function resetTree() {
     document.getElementById('valueInput').value = '';
 
     d3.select("#tree-container").select("svg").remove();
-
 
     localStorage.removeItem('operations');
 }
@@ -451,12 +431,13 @@ function executeSavedOperations() {
         renderTree();
     }
 }
+
 window.addEventListener('resize', renderTree);
-window.onload = function() {
+window.onload = function () {
     uiUpdater = new UIUpdater();
     tree = new AVLTree(uiUpdater);
     executeSavedOperations();
     updateDimensions();
     printTraversals();
     updateTreeStats();
-}
+};
