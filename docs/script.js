@@ -285,7 +285,11 @@ class AVLTree {
             const listItem = document.createElement('li');
             listItem.textContent = this.formatHistoryItem(operation);
             historyList.appendChild(listItem);
+            updateHistoryMessage(this.formatHistoryItem(operation));  // Update the scrolling history message
         });
+        if (this.history.length > 0) {
+            updateHistoryMessage(this.formatHistoryItem(this.history[0])); // Fixed here
+        }
     }
 
     formatHistoryItem(operation) {
@@ -610,7 +614,6 @@ function showWelcomeMessage() {
     });
 }
 
-
 function saveZoomState() {
     const zoomState = {
         transform: currentTransform,
@@ -699,3 +702,12 @@ window.onload = function () {
     printTraversals();
     updateTreeStats();
 };
+
+function updateHistoryMessage(message) {
+    const historyText = document.getElementById('historyText');
+    historyText.textContent = message;
+    historyText.style.animation = 'none';
+    // Trigger reflow
+    void historyText.offsetWidth;
+    historyText.style.animation = 'scrollText 12s linear 1';
+}

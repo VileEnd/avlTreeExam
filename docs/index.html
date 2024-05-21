@@ -12,34 +12,35 @@
 
 <body class="min-h-screen text-gray-900">
     <header class="flex border-b py-4 px-4 sm:px-10 bg-white font-sans min-h-[70px] tracking-wide sticky top-0 z-50">
-        <div class="flex flex-wrap items-center gap-5 w-full">
-            <a href="#">
-                <img src="https://avatars.githubusercontent.com/u/71889336?v=4" alt="logo" class="w-12 h-12 rounded-full" />
-            </a>
-            <div id="collapseMenu" class="lg:!block w-full lg:w-auto hidden lg:block">
-                <ul class="lg:flex lg:ml-14 lg:gap-x-5">
-                    <li>
-                        <button onclick="addValues()" class="lg:hover:text-[#007bff] text-[#007bff] block font-semibold text-[15px]">Add Values</button>
-                    </li>
-                    <li class="max-lg:border-b max-lg:py-3 px-3">
-                        <button onclick="deleteValue()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Delete Value</button>
-                    </li>
-                    <li class="max-lg:border-b max-lg:py-3 px-3">
-                        <button onclick="searchValue()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Search Value</button>
-                    </li>
-                    <li class="max-lg:border-b max-lg:py-3 px-3">
-                        <button onclick="resetTree()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Reset Tree</button>
-                    </li>
-                    <li class="max-lg:border-b max-lg:py-3 px-3">
-                        <button onclick="undoLastOperation()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Undo Last Operation</button>
-                    </li>
-                </ul>
-            </div>
-            <button id="toggleOpen" class="lg:hidden ml-auto">
-                <svg class="w-7 h-7" fill="#000" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                </svg>
-            </button>
+        <a href="#">
+            <img src="https://avatars.githubusercontent.com/u/71889336?v=4" alt="logo" class="w-12 h-12 rounded-full" />
+        </a>
+        <div id="historyMessage" class="flex-1 lg:hidden overflow-hidden whitespace-nowrap px-4">
+            <span id="historyText" class="block"></span>
+        </div>
+        <button id="toggleOpen" class="lg:hidden ml-auto">
+            <svg class="w-7 h-7" fill="#000" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+            </svg>
+        </button>
+        <div id="collapseMenu" class="lg:!block w-full lg:w-auto hidden lg:block">
+            <ul class="lg:flex lg:ml-14 lg:gap-x-5">
+                <li>
+                    <button onclick="addValues()" class="lg:hover:text-[#007bff] text-[#007bff] block font-semibold text-[15px]">Add Values</button>
+                </li>
+                <li class="max-lg:border-b max-lg:py-3 px-3">
+                    <button onclick="deleteValue()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Delete Value</button>
+                </li>
+                <li class="max-lg:border-b max-lg:py-3 px-3">
+                    <button onclick="searchValue()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Search Value</button>
+                </li>
+                <li class="max-lg:border-b max-lg:py-3 px-3">
+                    <button onclick="resetTree()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Reset Tree</button>
+                </li>
+                <li class="max-lg:border-b max-lg:py-3 px-3">
+                    <button onclick="undoLastOperation()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Undo Last Operation</button>
+                </li>
+            </ul>
         </div>
     </header>
     <div class="flex flex-col lg:flex-row">
@@ -65,14 +66,12 @@
                 </ul>
             </div>
         </div>
-        <!-- Tree Container Section -->
         <div class="flex-1 p-4 lg:w-3/5">
             <div class="flex justify-center mb-4 sticky top-[70px] bg-gray-100 z-10 p-4">
                 <input id="valueInput" type="text" placeholder="Enter values..." class="p-2 border border-gray-300 rounded w-full max-w-md bg-white">
             </div>
             <div id="tree-container" class="relative border border-gray-300 rounded p-4 mb-4 flex items-center justify-center" style="height: 400px; max-width: 100%; overflow-x: hidden;">
             </div>
-            <!-- Rotations/Metrics/Tree Stats Section for Mobile -->
             <div class="lg:hidden mb-4 p-4 border border-gray-300 rounded">
                 <h2 class="text-xl font-bold mb-2">Rotations</h2>
                 <ul class="list-disc pl-5">
@@ -92,12 +91,10 @@
                     <li>Tree Complexity: <span id="tree-complexity">0</span></li>
                 </ul>
             </div>
-            <!-- Result Section -->
             <div class="mb-4 lg:w-3/5 mx-auto">
                 <textarea id="resultBox" rows="5" class="w-full p-2 border border-gray-300 rounded" readonly></textarea>
             </div>
         </div>
-        <!-- History Section -->
         <div class="lg:w-3/5 p-4 border-l border-gray-300 bg-white">
             <div class="">
                 <h2 class="text-xl font-bold mb-2">Operations</h2>
@@ -105,7 +102,6 @@
             </div>
         </div>
     </div>
-    <!-- Breadcrumb Navigation for Mobile -->
     <div class="fixed bottom-4 right-4 lg:hidden flex flex-col items-end">
         <div id="breadcrumb-buttons" class="flex flex-col space-y-2 mb-2 hidden">
             <button onclick="addValues()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Add</button>
@@ -125,7 +121,7 @@
     <script src="script.js" defer></script>
 </body>
 
-<footer class="fixed bottom-4 left-4 flex items-center space-x-2 lg:hidden">
+<footer class="fixed bottom-4 left-4 flex items-center space-x-2 ">
     <a href="https://github.com/VileEnd/avlTreeExam" target="_blank">
         <img src="github-mark.png" alt="GitHub" class="w-8 h-8 opacity-70">
     </a>
