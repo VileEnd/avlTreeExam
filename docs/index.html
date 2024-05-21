@@ -11,18 +11,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="robots" content="index, follow">
     <meta name="googlebot" content="index, follow">
-    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta name="google-site-verification" content="-4WW-lqLTqP113QYPwr7sYrWFfqDh4s6WUTtaOcMXfQ">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="652478092941459468.gif" sizes="16x16" type="image/gif">
-    <meta name="google-site-verification" content="-4WW-lqLTqP113QYPwr7sYrWFfqDh4s6WUTtaOcMXfQ" />
+    <script src="https://d3js.org/d3.v6.min.js" defer></script>
+    <script src="script.js" defer></script>
 </head>
 
 <body class="bg-gray-200 dark:bg-gray-800 p-4 sm:p-10 transition duration-500">
 <div class="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
     <div class="flex-1">
         <div class="mb-4">
-            <label for="valueInput"></label><input
+                <input
                     type="text"
                     id="valueInput"
                     placeholder="Enter a value"
@@ -37,7 +38,7 @@
             <button onclick="renderTree()" class="flex-1 px-4 py-2 font-bold text-white bg-blue-500 rounded">Render Tree</button>
         </div>
         <div class="mb-4">
-            <label for="resultBox"></label><textarea id="resultBox" class="px-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" readonly></textarea>
+                <textarea id="resultBox" class="px-4 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" readonly></textarea>
         </div>
         <div id="tree-container" class="relative"></div>
     </div>
@@ -58,15 +59,13 @@
 </div>
 <div class="fixed bottom-4 left-4 flex items-center space-x-2">
     <a href="https://github.com/VileEnd/avlTreeExam" target="_blank">
-        <img src="https://github.githubassets.com/images/modules/logos_page/Octocat.png" alt="GitHub" style="width:32px;height:32px;opacity:0.7;">
+        <img src="github-mark.png" alt="GitHub" style="width:32px;height:32px;opacity:0.7;">
     </a>
     <span>Made by <a href="https://github.com/VileEnd/avlTreeExam" target="_blank" class="text-blue-500 font-bold">Vileend</a></span>
 </div>
 <div class="fixed bottom-4 right-4">
     <button onclick="resetTree()" class="px-4 py-2 font-bold text-white bg-red-500 rounded">Reset</button>
 </div>
-<script src="script.js"></script>
-
 </body>
 
 </html>
