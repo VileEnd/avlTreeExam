@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AVL Tree Visualizer</title>
+    <link rel="icon" href="652478092941459468.gif" type="image/x-icon">
     <meta name="description" content="Visualize AVL Trees with ease. Add, delete, and reset values to see how AVL Trees balance themselves.">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -13,7 +14,7 @@
 <body class="min-h-screen text-gray-900">
     <header class="flex border-b py-4 px-4 sm:px-10 bg-white font-sans min-h-[70px] tracking-wide sticky top-0 z-50">
         <a href="#">
-            <img src="https://avatars.githubusercontent.com/u/71889336?v=4" alt="logo" class="w-12 h-12 rounded-full" />
+            <img src="https://avatars.githubusercontent.com/u/71889336?v=4" alt="logo" title="logo" class="logo w-12 h-12 rounded-full" />
         </a>
         <div id="historyMessage" class="flex-1 lg:hidden overflow-hidden whitespace-nowrap px-4">
             <span id="historyText" class="block"></span>
@@ -68,7 +69,7 @@
         </div>
         <div class="flex-1 p-4 lg:w-3/5">
             <div class="flex justify-center mb-4 sticky top-[70px] bg-gray-100 z-10 p-4">
-                <input id="valueInput" type="text" placeholder="Enter values..." class="p-2 border border-gray-300 rounded w-full max-w-md bg-white">
+                <input id="valueInput" type="number" placeholder="Enter values..." class="p-2 border border-gray-300 rounded w-full max-w-md bg-white">
             </div>
             <div id="tree-container" class="relative border border-gray-300 rounded p-4 mb-4 flex items-center justify-center" style="height: 400px; max-width: 100%; overflow-x: hidden;">
             </div>
@@ -95,7 +96,7 @@
                 <textarea id="resultBox" rows="5" class="w-full p-2 border border-gray-300 rounded" readonly></textarea>
             </div>
         </div>
-        <div class="lg:w-3/5 p-4 border-l border-gray-300 bg-white">
+        <div class="lg:w-1/5 p-4 border-l border-gray-300 bg-white">
             <div class="">
                 <h2 class="text-xl font-bold mb-2">Operations</h2>
                 <ul id="history-list" class="space-y-2"></ul>
@@ -103,7 +104,7 @@
         </div>
     </div>
     <div class="fixed bottom-4 right-4 lg:hidden flex flex-col items-end">
-        <div id="breadcrumb-buttons" class="flex flex-col space-y-2 mb-2 hidden">
+        <div id="breadcrumb-buttons" class="flex flex-col space-y-2 mb-2">
             <button onclick="addValues()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Add</button>
             <button onclick="deleteValue()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Delete</button>
             <button onclick="searchValue()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Search</button>
@@ -125,7 +126,7 @@
     <a href="https://github.com/VileEnd/avlTreeExam" target="_blank">
         <img src="github-mark.png" alt="GitHub" class="w-8 h-8 opacity-70">
     </a>
-    <span>Made by <a href="https://github.com/VileEnd/avlTreeExam" target="_blank" class="text-blue-500 font-bold">Vileend</a></span>
+    <span>Made by <a href="https://github.com/VileEnd/avlTreeExam" target="_blank" class="text-blue-500 font-bold">VileEnd</a></span>
 </footer>
 
 </html>
