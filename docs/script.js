@@ -133,11 +133,13 @@ class AVLTree {
     addNode(key) {
         this.root = this.insert(this.root, key);
         this.history.push({ type: 'add', key: key });
+        this.updateHistory();
     }
 
     deleteNode(key) {
         this.root = this.delete(this.root, key);
         this.history.push({ type: 'delete', key: key });
+        this.updateHistory();
     }
 
     delete(root, key) {
@@ -200,8 +202,19 @@ class AVLTree {
             this.root = this.insert(this.root, lastOperation.key);
         }
 
+        this.updateHistory();
         renderTree();
         printTraversals();
+    }
+
+    updateHistory() {
+        const historyList = document.getElementById('history-list');
+        historyList.innerHTML = '';
+        this.history.forEach(operation => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${operation.type === 'add' ? 'Added' : 'Deleted'} node with key ${operation.key}`;
+            historyList.appendChild(listItem);
+        });
     }
 
     printPreOrder(node = this.root, logger = console.log) {
@@ -473,11 +486,8 @@ function updateDimensions() {
 }
 
 window.onresize = () => {
-
     updateDimensions();
-
     renderTree();
-
 };
 
 function updateTreeStats() {

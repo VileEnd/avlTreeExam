@@ -2,6 +2,13 @@ body {
     font-family: Arial, sans-serif;
     padding: 20px;
     overflow-x: hidden; /* Prevent horizontal scrolling on larger screens */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#controls {
+    margin-bottom: 20px;
 }
 
 #tree-container {
@@ -10,6 +17,32 @@ body {
     max-width: 100%;  /* Ensure the container doesn't stretch beyond its parent */
     overflow-x: auto; /* Allow horizontal scrolling on smaller screens */
     overflow-y: auto; /* Allow vertical scrolling */
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+#resultBox {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 20px;
+}
+
+#history-container {
+    width: 100%;
+    max-width: 600px;
+    margin-top: 20px;
+}
+
+#history-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+#history-list li {
+    background: #f9f9f9;
+    margin: 5px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
 }
 
 /* Dark mode styles */
