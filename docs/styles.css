@@ -1,17 +1,20 @@
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #f9fafb;
 }
 
 #tree-container {
     min-height: 500px;
+    width: 100%;
     max-width: 100%;
     border: 1px solid #cbd5e0;
     margin-bottom: 20px;
     padding: 10px;
-    background-color: #ffffff;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-    overflow: hidden; /* Ensure no scrolling */
+    transition: border-color 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
 }
 
 #history-list {
@@ -38,25 +41,22 @@ textarea:focus {
 }
 
 input:focus {
-    position: sticky;
-    top: 70px;
     z-index: 10;
-    background-color: #f9fafb;
 }
 
 @media (max-width: 1024px) {
-    .lg\:w-1\/4 {
+    .lg\:w-1\/5 {
         width: 100%;
     }
 
-    .lg\:flex {
-        display: block;
+    .lg\:w-3\/5 {
+        width: 100%;
     }
 
-    .lg\:space-x-4 {
-        margin-top: 10px;
+    .lg\:block {
+        display: none;
     }
-    
+
     header ul {
         display: none;
     }

@@ -1,3 +1,13 @@
+let zoomLevel = 1;  // Declare zoomLevel at the top
+const zoomStep = 0.1;
+let currentTransform = d3.zoomIdentity;
+
+const zoom = d3.zoom().on("zoom", function (event) {
+    currentTransform = event.transform;
+    d3.select("#svg-content").attr("transform", currentTransform);
+    saveZoomState();
+});
+
 class AVLNode {
     constructor(key) {
         this.key = key;
@@ -11,54 +21,37 @@ class AVLNode {
 
 class UIUpdater {
     constructor() {
+        this.reset();
+    }
+
+    reset() {
         this.leftRotations = 0;
         this.rightRotations = 0;
         this.leftRightRotations = 0;
         this.rightLeftRotations = 0;
         this.comparisons = 0;
         this.operationTime = 0;
+        this.updateAllMetrics();
     }
 
-    incrementLeftRotations() {
-        this.leftRotations++;
-        this.updateRotationCount();
-    }
-
-    incrementRightRotations() {
-        this.rightRotations++;
-        this.updateRotationCount();
-    }
-
-    incrementLeftRightRotations() {
-        this.leftRightRotations++;
-        this.updateRotationCount();
-    }
-
-    incrementRightLeftRotations() {
-        this.rightLeftRotations++;
-        this.updateRotationCount();
-    }
-
-    incrementComparisons() {
-        this.comparisons++;
-        this.updateMetrics();
+    incrementCounter(counter) {
+        this[counter]++;
+        this.updateAllMetrics();
     }
 
     setOperationTime(time) {
         this.operationTime = time;
-        this.updateMetrics();
+        this.updateMetrics(['operation-time']);
     }
 
-    updateRotationCount() {
-        document.getElementById('left-rotations').textContent = this.leftRotations;
-        document.getElementById('right-rotations').textContent = this.rightRotations;
-        document.getElementById('left-right-rotations').textContent = this.leftRightRotations;
-        document.getElementById('right-left-rotations').textContent = this.rightLeftRotations;
+    updateMetrics(metrics) {
+        metrics.forEach(metric => {
+            document.getElementById(metric).textContent = this[metric.replace('-', '')];
+        });
     }
 
-    updateMetrics() {
-        document.getElementById('comparisons').textContent = this.comparisons;
-        document.getElementById('operation-time').textContent = this.operationTime.toFixed(2);
+    updateAllMetrics() {
+        this.updateMetrics(['left-rotations', 'right-rotations', 'left-right-rotations', 'right-left-rotations', 'comparisons', 'operation-time']);
     }
 }
 
@@ -73,24 +66,17 @@ class AVLTree {
         return node ? node.height : 0;
     }
 
-    rightRotate(y) {
-        const x = y.left;
-        y.left = x.right;
-        x.right = y;
-        y.height = Math.max(this.height(y.left), this.height(y.right)) + 1;
-        x.height = Math.max(this.height(x.left), this.height(x.right)) + 1;
-        this.uiUpdater.incrementRightRotations();
-        return x;
-    }
+    rotate(node, direction) {
+        const opposite = direction === 'left' ? 'right' : 'left';
+        const temp = node[opposite];
+        node[opposite] = temp[direction];
+        temp[direction] = node;
 
-    leftRotate(x) {
-        const y = x.right;
-        x.right = y.left;
-        y.left = x;
-        x.height = Math.max(this.height(x.left), this.height(x.right)) + 1;
-        y.height = Math.max(this.height(y.left), this.height(y.right)) + 1;
-        this.uiUpdater.incrementLeftRotations();
-        return y;
+        node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
+        temp.height = 1 + Math.max(this.height(temp.left), this.height(temp.right));
+        this.uiUpdater.incrementCounter(`${direction}Rotations`);
+
+        return temp;
     }
 
     getBalance(node) {
@@ -111,11 +97,12 @@ class AVLTree {
     }
 
     insert(node, key, parent = null) {
-        this.uiUpdater.incrementComparisons();
+        this.uiUpdater.incrementCounter('comparisons');
         if (!node) {
-            this.history.unshift({ type: 'add', key: key, parent: parent ? parent.key : 'none', reason: 'Inserted as a new node' });
+            this.history.unshift({ type: 'add', key, parent: parent ? parent.key : 'none', reason: 'Inserted as a new node' });
             return new AVLNode(key);
         }
+
         if (key < node.key) {
             node.left = this.insert(node.left, key, node);
         } else if (key > node.key) {
@@ -127,28 +114,30 @@ class AVLTree {
         node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
         const balance = this.getBalance(node);
 
-        if (balance > 1 && key < node.left.key) {
-            this.history.unshift({ type: 'rotation', key: node.key, rotation: 'right', reason: 'Left-Left case' });
-            return this.rightRotate(node);
+        if (balance > 1) {
+            if (key < node.left.key) {
+                this.history.unshift({ type: 'rotation', key: node.key, rotation: 'right', reason: 'Left-Left case' });
+                return this.rotate(node, 'right');
+            }
+            if (key > node.left.key) {
+                node.left = this.rotate(node.left, 'left');
+                this.uiUpdater.incrementCounter('leftRightRotations');
+                this.history.unshift({ type: 'rotation', key: node.key, rotation: 'left-right', reason: 'Left-Right case' });
+                return this.rotate(node, 'right');
+            }
         }
 
-        if (balance < -1 && key > node.right.key) {
-            this.history.unshift({ type: 'rotation', key: node.key, rotation: 'left', reason: 'Right-Right case' });
-            return this.leftRotate(node);
-        }
-
-        if (balance > 1 && key > node.left.key) {
-            node.left = this.leftRotate(node.left);
-            this.uiUpdater.incrementLeftRightRotations();
-            this.history.unshift({ type: 'rotation', key: node.key, rotation: 'left-right', reason: 'Left-Right case' });
-            return this.rightRotate(node);
-        }
-
-        if (balance < -1 && key < node.right.key) {
-            node.right = this.rightRotate(node.right);
-            this.uiUpdater.incrementRightLeftRotations();
-            this.history.unshift({ type: 'rotation', key: node.key, rotation: 'right-left', reason: 'Right-Left case' });
-            return this.leftRotate(node);
+        if (balance < -1) {
+            if (key > node.right.key) {
+                this.history.unshift({ type: 'rotation', key: node.key, rotation: 'left', reason: 'Right-Right case' });
+                return this.rotate(node, 'left');
+            }
+            if (key < node.right.key) {
+                node.right = this.rotate(node.right, 'right');
+                this.uiUpdater.incrementCounter('rightLeftRotations');
+                this.history.unshift({ type: 'rotation', key: node.key, rotation: 'right-left', reason: 'Right-Left case' });
+                return this.rotate(node, 'left');
+            }
         }
 
         this.updateNodeDepthAndBalance(node);
@@ -164,31 +153,17 @@ class AVLTree {
     }
 
     search(node, key, path = []) {
-        this.uiUpdater.incrementComparisons();
+        this.uiUpdater.incrementCounter('comparisons');
         if (!node) {
-            this.history.unshift({ type: 'search', key: key, path: [...path], found: false });
+            this.history.unshift({ type: 'search', key, path: [...path], found: false });
             return null;
         }
         path.push(node.key);
         if (key === node.key) {
-            this.history.unshift({ type: 'search', key: key, path: [...path], found: true });
+            this.history.unshift({ type: 'search', key, path: [...path], found: true });
             return node;
         }
-        if (key < node.key) {
-            return this.search(node.left, key, path);
-        } else {
-            return this.search(node.right, key, path);
-        }
-    }
-
-    searchNode(key) {
-        const startTime = performance.now();
-        const result = this.search(this.root, key);
-        const endTime = performance.now();
-        this.uiUpdater.setOperationTime(endTime - startTime);
-        this.highlightSearchPath(key);
-        this.updateHistory();
-        return result;
+        return key < node.key ? this.search(node.left, key, path) : this.search(node.right, key, path);
     }
 
     highlightSearchPath(key) {
@@ -214,6 +189,16 @@ class AVLTree {
             .style("fill", d => path.includes(d.data.key) ? "red" : (d._children ? "green" : "#fff"));
     }
 
+    searchNode(key) {
+        const startTime = performance.now();
+        const result = this.search(this.root, key);
+        const endTime = performance.now();
+        this.uiUpdater.setOperationTime(endTime - startTime);
+        this.highlightSearchPath(key);
+        this.updateHistory();
+        return result;
+    }
+
     deleteNode(key) {
         const startTime = performance.now();
         this.root = this.delete(this.root, key);
@@ -223,7 +208,7 @@ class AVLTree {
     }
 
     delete(root, key, parent = null) {
-        this.uiUpdater.incrementComparisons();
+        this.uiUpdater.incrementCounter('comparisons');
         if (!root) return root;
 
         if (key < root.key) {
@@ -233,7 +218,7 @@ class AVLTree {
         } else {
             if (!root.left || !root.right) {
                 const deletedNode = root;
-                root = root.left ? root.left : root.right;
+                root = root.left || root.right;
                 this.history.unshift({ type: 'delete', key: deletedNode.key, parent: parent ? parent.key : 'none', reason: 'Node had one or no children' });
             } else {
                 const temp = this.getMinValueNode(root.right);
@@ -248,26 +233,24 @@ class AVLTree {
         root.height = 1 + Math.max(this.height(root.left), this.height(root.right));
         const balance = this.getBalance(root);
 
-        if (balance > 1 && this.getBalance(root.left) >= 0) {
-            this.history.unshift({ type: 'rotation', key: root.key, rotation: 'right', reason: 'Left-Left case' });
-            return this.rightRotate(root);
-        }
-
-        if (balance > 1 && this.getBalance(root.left) < 0) {
-            root.left = this.leftRotate(root.left);
+        if (balance > 1) {
+            if (this.getBalance(root.left) >= 0) {
+                this.history.unshift({ type: 'rotation', key: root.key, rotation: 'right', reason: 'Left-Left case' });
+                return this.rotate(root, 'right');
+            }
+            root.left = this.rotate(root.left, 'left');
             this.history.unshift({ type: 'rotation', key: root.key, rotation: 'left-right', reason: 'Left-Right case' });
-            return this.rightRotate(root);
+            return this.rotate(root, 'right');
         }
 
-        if (balance < -1 && this.getBalance(root.right) <= 0) {
-            this.history.unshift({ type: 'rotation', key: root.key, rotation: 'left', reason: 'Right-Right case' });
-            return this.leftRotate(root);
-        }
-
-        if (balance < -1 && this.getBalance(root.right) > 0) {
-            root.right = this.rightRotate(root.right);
+        if (balance < -1) {
+            if (this.getBalance(root.right) <= 0) {
+                this.history.unshift({ type: 'rotation', key: root.key, rotation: 'left', reason: 'Right-Right case' });
+                return this.rotate(root, 'left');
+            }
+            root.right = this.rotate(root.right, 'right');
             this.history.unshift({ type: 'rotation', key: root.key, rotation: 'right-left', reason: 'Right-Left case' });
-            return this.leftRotate(root);
+            return this.rotate(root, 'left');
         }
 
         this.updateNodeDepthAndBalance(root);
@@ -300,17 +283,22 @@ class AVLTree {
         historyList.innerHTML = '';
         this.history.forEach(operation => {
             const listItem = document.createElement('li');
-            if (operation.type === 'add') {
-                listItem.textContent = `Added node with key ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
-            } else if (operation.type === 'delete') {
-                listItem.textContent = `Deleted node with key ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
-            } else if (operation.type === 'rotation') {
-                listItem.textContent = `Performed ${operation.rotation} rotation on node with key ${operation.key}. Reason: ${operation.reason}`;
-            } else if (operation.type === 'search') {
-                listItem.textContent = `Searched for node with key ${operation.key}. Path: ${operation.path.join(' -> ')}. ${operation.found ? 'Node found.' : 'Node not found.'}`;
-            }
+            listItem.textContent = this.formatHistoryItem(operation);
             historyList.appendChild(listItem);
         });
+    }
+
+    formatHistoryItem(operation) {
+        switch (operation.type) {
+            case 'add':
+                return `Added node with key ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
+            case 'delete':
+                return `Deleted node with key ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
+            case 'rotation':
+                return `Performed ${operation.rotation} rotation on node with key ${operation.key}. Reason: ${operation.reason}`;
+            case 'search':
+                return `Searched for node with key ${operation.key}. Path: ${operation.path.join(' -> ')}. ${operation.found ? 'Node found.' : 'Node not found.'}`;
+        }
     }
 
     printPreOrder(node = this.root, logger = console.log) {
@@ -338,21 +326,17 @@ class AVLTree {
     }
 
     getDepth(node = this.root) {
-        if (node == null) {
+        if (!node) {
             return 0;
         }
-        const leftDepth = this.getDepth(node.left);
-        const rightDepth = this.getDepth(node.right);
-        return Math.max(leftDepth, rightDepth) + 1;
+        return 1 + Math.max(this.getDepth(node.left), this.getDepth(node.right));
     }
 
     getComplexity(node = this.root) {
-        if (node == null) {
+        if (!node) {
             return 0;
         }
-        const leftComplexity = this.getComplexity(node.left);
-        const rightComplexity = this.getComplexity(node.right);
-        return leftComplexity + rightComplexity + 1;
+        return 1 + this.getComplexity(node.left) + this.getComplexity(node.right);
     }
 }
 
@@ -360,6 +344,7 @@ let uiUpdater = new UIUpdater();
 let tree = new AVLTree(uiUpdater);
 
 function addValues() {
+    d3.select("#tree-container").select("svg").remove();
     const valueInput = document.getElementById('valueInput');
     const values = valueInput.value.split(/[\s,]+/).map(v => parseInt(v, 10)).filter(v => !isNaN(v));
     if (values.length > 0) {
@@ -367,11 +352,7 @@ function addValues() {
             tree.addNode(value);
         });
 
-        let operations = localStorage.getItem('operations');
-        operations = operations ? JSON.parse(operations) : [];
-        operations.push({ type: 'addValues', values: values });
-        localStorage.setItem('operations', JSON.stringify(operations));
-
+        updateOperations('addValues', values);
         valueInput.value = '';
         renderTree();
         printTraversals();
@@ -381,16 +362,12 @@ function addValues() {
 }
 
 function deleteValue() {
+    d3.select("#tree-container").select("svg").remove();
     const valueInput = document.getElementById('valueInput');
     const value = parseInt(valueInput.value, 10);
     if (!isNaN(value)) {
         tree.deleteNode(value);
-
-        let operations = localStorage.getItem('operations');
-        operations = operations ? JSON.parse(operations) : [];
-        operations.push({ type: 'deleteValue', value: value });
-        localStorage.setItem('operations', JSON.stringify(operations));
-
+        updateOperations('deleteValue', value);
         valueInput.value = '';
         renderTree();
         printTraversals();
@@ -399,16 +376,15 @@ function deleteValue() {
     }
 }
 
-function undoLastOperation() {
-    tree.undoLastOperation();
+function updateOperations(type, values) {
+    let operations = localStorage.getItem('operations');
+    operations = operations ? JSON.parse(operations) : [];
+    operations.push({ type, values });
+    localStorage.setItem('operations', JSON.stringify(operations));
 }
 
-function collapse(d) {
-    if (d.children) {
-        d._children = d.children;
-        d._children.forEach(collapse);
-        d.children = null;
-    }
+function undoLastOperation() {
+    tree.undoLastOperation();
 }
 
 function renderTree() {
@@ -416,19 +392,22 @@ function renderTree() {
         return;
     }
 
-    const margin = { top: 20, right: 40, bottom: 150, left: 10 },
-        container = d3.select("#tree-container").node().getBoundingClientRect(),
-        width = container.width - margin.right - margin.left,
-        height = container.height - margin.top - margin.bottom;
+    const margin = { top: 20, right: 40, bottom: 150, left: 10 };
+    const container = d3.select("#tree-container").node().getBoundingClientRect();
+    const width = container.width - margin.right - margin.left;
+    const height = container.height - margin.top - margin.bottom;
 
+    // Remove any existing SVG element inside #tree-container
     d3.select("#tree-container").select("svg").remove();
 
     const svg = d3.select("#tree-container")
         .append("svg")
-        .attr("width", width + margin.right + margin.left)
-        .attr("height", height + margin.top + margin.bottom)
+        .attr("width", container.width)
+        .attr("height", container.height)
+        .call(zoom)  // Apply zoom behavior
         .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("id", "svg-content")
+        .attr("transform", currentTransform);  // Apply current transform
 
     const treemap = d3.tree().size([height, width]);
 
@@ -439,12 +418,10 @@ function renderTree() {
     let i = 0;
     const duration = 750;
 
-    update(rootHierarchy);
-
     function update(source) {
         const treeData = treemap(rootHierarchy);
-        const nodes = treeData.descendants(),
-            links = treeData.descendants().slice(1);
+        const nodes = treeData.descendants();
+        const links = treeData.descendants().slice(1);
 
         nodes.forEach(d => d.y = d.depth * 100);
 
@@ -453,7 +430,7 @@ function renderTree() {
 
         const nodeEnter = node.enter().append('g')
             .attr('class', 'node')
-            .attr("transform", d => "translate(" + source.y0 + "," + source.x0 + ")")
+            .attr("transform", d => `translate(${source.y0},${source.x0})`)
             .on('click', click);
 
         nodeEnter.append('circle')
@@ -493,13 +470,7 @@ function renderTree() {
 
         nodeUpdate.selectAll('text')
             .attr("x", d => d.children || d._children ? -13 : 13)
-            .attr("dy", (d, i) => {
-                switch (i) {
-                    case 0: return "-.5em";
-                    case 1: return "1em";
-                    case 2: return "2em";
-                }
-            });
+            .attr("dy", (d, i) => ["-.5em", "1em", "2em"][i]);
 
         nodeUpdate.select('circle.node')
             .attr('r', 10)
@@ -511,11 +482,8 @@ function renderTree() {
             .attr("transform", d => `translate(${source.x},${source.y})`)
             .remove();
 
-        nodeExit.select('circle')
-            .attr('r', 1e-6);
-
-        nodeExit.select('text')
-            .style('fill-opacity', 1e-6);
+        nodeExit.select('circle').attr('r', 1e-6);
+        nodeExit.select('text').style('fill-opacity', 1e-6);
 
         const link = svg.selectAll('path.link')
             .data(links, d => d.id);
@@ -536,11 +504,6 @@ function renderTree() {
             .style('stroke', 'lightsteelblue')
             .attr("stroke-width", 2);
 
-        nodeUpdate.select('circle.node')
-            .attr('r', 10)
-            .style("fill", d => d._children ? "green" : "#fff") // Reset node colors
-            .attr('cursor', 'pointer');
-
         const linkExit = link.exit().transition()
             .duration(duration)
             .attr('d', d => {
@@ -549,11 +512,8 @@ function renderTree() {
             })
             .remove();
 
-        linkExit.select('circle')
-            .attr('r', 1e-6);
-
-        linkExit.select('text')
-            .style('fill-opacity', 1e-6);
+        linkExit.select('circle').attr('r', 1e-6);
+        linkExit.select('text').style('fill-opacity', 1e-6);
 
         nodes.forEach(d => {
             d.x0 = d.x;
@@ -561,11 +521,10 @@ function renderTree() {
         });
 
         function diagonal(s, d) {
-            const path = `M ${s.x} ${s.y}
+            return `M ${s.x} ${s.y}
                 C ${(s.x + d.x) / 2} ${s.y},
                 ${(s.x + d.x) / 2} ${d.y},
                 ${d.x} ${d.y}`;
-            return path;
         }
 
         function click(d) {
@@ -581,12 +540,15 @@ function renderTree() {
     }
 
     update(rootHierarchy);
+
+    // Apply the current zoom transform
+    d3.select("#tree-container").select("svg").call(zoom.transform, currentTransform);
 }
 
 function updateDimensions() {
-    const margin = { top: 20, right: 20, bottom: 20, left: 20 },
-        width = window.innerWidth - margin.right - margin.left - 40,
-        height = window.innerHeight - margin.top - margin.bottom - 200;
+    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+    const width = window.innerWidth - margin.right - margin.left - 40;
+    const height = window.innerHeight - margin.top - margin.bottom - 200;
     d3.select("#tree-container svg")
         .attr("width", width + margin.right + margin.left)
         .attr("height", height + margin.top + margin.bottom);
@@ -596,48 +558,41 @@ var toggleOpen = document.getElementById('toggleOpen');
 var toggleClose = document.getElementById('toggleClose');
 var collapseMenu = document.getElementById('collapseMenu');
 
-function handleClick() {
-    if (collapseMenu.style.display === 'block') {
-        collapseMenu.style.display = 'none';
-    } else {
-        collapseMenu.style.display = 'block';
-    }
-}
+toggleOpen.addEventListener('click', () => {
+    collapseMenu.style.display = collapseMenu.style.display === 'block' ? 'none' : 'block';
+});
 
-toggleOpen.addEventListener('click', handleClick);
 window.onresize = () => {
     updateDimensions();
     renderTree();
 };
 
-document.getElementById('valueInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        addValues();
-    }
-});
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('valueInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            d3.select("#tree-container").select("svg").remove();
+            addValues();
+        }
+    });
 
-document.getElementById('toggleBreadcrumb').addEventListener('click', function () {
-    const buttons = document.getElementById('breadcrumb-buttons');
-    if (buttons.classList.contains('hidden')) {
-        buttons.classList.remove('hidden');
-    } else {
-        buttons.classList.add('hidden');
-    }
+    document.getElementById('toggleBreadcrumb').addEventListener('click', function () {
+        const buttons = document.getElementById('breadcrumb-buttons');
+        const icon = document.getElementById('breadcrumbIcon');
+        buttons.classList.toggle('hidden');
+        icon.style.transform = buttons.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(-90deg)';
+    });
 });
 
 function updateTreeStats() {
-    const treeDepth = tree.getDepth();
-    const treeComplexity = tree.getComplexity();
-
-    document.getElementById('tree-depth').textContent = treeDepth;
-    document.getElementById('tree-complexity').textContent = treeComplexity;
+    document.getElementById('tree-depth').textContent = tree.getDepth();
+    document.getElementById('tree-complexity').textContent = tree.getComplexity();
 }
 
 function printTraversals() {
-    let preOrderResult = [];
-    let inOrderResult = [];
-    let postOrderResult = [];
+    const preOrderResult = [];
+    const inOrderResult = [];
+    const postOrderResult = [];
 
     tree.printPreOrder(undefined, value => preOrderResult.push(value));
     tree.printInOrder(undefined, value => inOrderResult.push(value));
@@ -653,14 +608,11 @@ function updateTraversalResults(preOrder, inOrder, postOrder) {
 
 function resetTree() {
     tree = new AVLTree(uiUpdater);
-    uiUpdater = new UIUpdater();
-    uiUpdater.updateRotationCount();
+    uiUpdater.reset();
     document.getElementById('resultBox').value = '';
     document.getElementById('valueInput').value = '';
-
-    d3.select("#tree-container").select("svg").remove();
-
     localStorage.removeItem('operations');
+    d3.select("#tree-container").select("svg").remove();
     tree.history = [];
     tree.updateHistory();
 }
@@ -670,11 +622,7 @@ function searchValue() {
     const value = parseInt(valueInput.value, 10);
     if (!isNaN(value)) {
         const result = tree.searchNode(value);
-        if (result) {
-            alert(`Node with key ${value} found.`);
-        } else {
-            alert(`Node with key ${value} not found.`);
-        }
+        alert(result ? `Node with key ${value} found.` : `Node with key ${value} not found.`);
     } else {
         alert('Please enter a valid number.');
     }
@@ -690,10 +638,10 @@ function executeSavedOperations() {
                     tree.addNode(value);
                 });
             } else if (op.type === 'deleteValue') {
-                tree.deleteNode(op.value);
+                tree.deleteNode(op.values);
             }
         });
-        renderTree();
+        renderTree();  // Ensure tree is rendered after loading saved operations
     }
 }
 

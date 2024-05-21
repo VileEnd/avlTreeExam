@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,8 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="min-h-screen bg-gray-100 text-gray-900">
+
+<body class="min-h-screen text-gray-900">
     <header class="flex border-b py-4 px-4 sm:px-10 bg-white font-sans min-h-[70px] tracking-wide sticky top-0 z-50">
         <div class="flex flex-wrap items-center gap-5 w-full">
             <a href="#">
@@ -40,35 +42,10 @@
             </button>
         </div>
     </header>
-    <div class="container mx-auto p-4 lg:flex lg:space-x-4">
-        <div class="lg:w-1/4 mb-4 lg:mb-0 p-4 border border-gray-300 rounded hidden lg:block">
-            <h2 class="text-xl font-bold mb-2">Rotations</h2>
-            <ul class="list-disc pl-5">
-                <li>Left Rotations: <span id="left-rotations">0</span></li>
-                <li>Right Rotations: <span id="right-rotations">0</span></li>
-                <li>Left-Right Rotations: <span id="left-right-rotations">0</span></li>
-                <li>Right-Left Rotations: <span id="right-left-rotations">0</span></li>
-            </ul>
-            <h2 class="text-xl font-bold mb-2 mt-4">Metrics</h2>
-            <ul class="list-disc pl-5">
-                <li>Comparisons: <span id="comparisons">0</span></li>
-                <li>Operation Time (ms): <span id="operation-time">0.00</span></li>
-            </ul>
-            <h2 class="text-xl font-bold mb-2 mt-4">Tree Stats</h2>
-            <ul class="list-disc pl-5">
-                <li>Tree Depth: <span id="tree-depth">0</span></li>
-                <li>Tree Complexity: <span id="tree-complexity">0</span></li>
-            </ul>
-        </div>
-        <div class="flex-1">
-            <div class="flex justify-center mb-4 sticky top-[70px] bg-gray-100 z-10 p-4">
-                <input id="valueInput" type="text" placeholder="Enter values..." class="p-2 border border-gray-300 rounded w-full max-w-md">
-            </div>
-            <div id="tree-container" class="border border-gray-300 rounded p-4 mb-4" style="height: 400px;"></div>
-            <div class="mb-4">
-                <textarea id="resultBox" rows="5" class="w-full p-2 border border-gray-300 rounded" readonly></textarea>
-            </div>
-            <div class="lg:hidden mb-4 p-4 border border-gray-300 rounded">
+    <div class="flex flex-col lg:flex-row">
+        <!-- Rotations/Metrics/Tree Stats Section -->
+        <div class="lg:w-1/5 p-4 border-r border-gray-300 bg-white hidden lg:block">
+            <div class="mt-16">
                 <h2 class="text-xl font-bold mb-2">Rotations</h2>
                 <ul class="list-disc pl-5">
                     <li>Left Rotations: <span id="left-rotations">0</span></li>
@@ -88,33 +65,71 @@
                 </ul>
             </div>
         </div>
-        <div class="lg:w-1/4 p-4 border border-gray-300 rounded overflow-y-auto" style="max-height: 600px;">
-            <h2 class="text-xl font-bold mb-2">History</h2>
-            <ul id="history-list" class="space-y-2"></ul>
+        <!-- Tree Container Section -->
+        <div class="flex-1 p-4 lg:w-3/5">
+            <div class="flex justify-center mb-4 sticky top-[70px] bg-gray-100 z-10 p-4">
+                <input id="valueInput" type="text" placeholder="Enter values..." class="p-2 border border-gray-300 rounded w-full max-w-md bg-white">
+            </div>
+            <div id="tree-container" class="relative border border-gray-300 rounded p-4 mb-4 flex items-center justify-center" style="height: 400px; max-width: 100%; overflow-x: hidden;">
+            </div>
+            <!-- Rotations/Metrics/Tree Stats Section for Mobile -->
+            <div class="lg:hidden mb-4 p-4 border border-gray-300 rounded">
+                <h2 class="text-xl font-bold mb-2">Rotations</h2>
+                <ul class="list-disc pl-5">
+                    <li>Left Rotations: <span id="left-rotations">0</span></li>
+                    <li>Right Rotations: <span id="right-rotations">0</span></li>
+                    <li>Left-Right Rotations: <span id="left-right-rotations">0</span></li>
+                    <li>Right-Left Rotations: <span id="right-left-rotations">0</span></li>
+                </ul>
+                <h2 class="text-xl font-bold mb-2 mt-4">Metrics</h2>
+                <ul class="list-disc pl-5">
+                    <li>Comparisons: <span id="comparisons">0</span></li>
+                    <li>Operation Time (ms): <span id="operation-time">0.00</span></li>
+                </ul>
+                <h2 class="text-xl font-bold mb-2 mt-4">Tree Stats</h2>
+                <ul class="list-disc pl-5">
+                    <li>Tree Depth: <span id="tree-depth">0</span></li>
+                    <li>Tree Complexity: <span id="tree-complexity">0</span></li>
+                </ul>
+            </div>
+            <!-- Result Section -->
+            <div class="mb-4 lg:w-3/5 mx-auto">
+                <textarea id="resultBox" rows="5" class="w-full p-2 border border-gray-300 rounded" readonly></textarea>
+            </div>
+        </div>
+        <!-- History Section -->
+        <div class="lg:w-1/5 p-4 border-l border-gray-300 bg-white hidden lg:block">
+            <div class="mt-16">
+                <h2 class="text-xl font-bold mb-2">History</h2>
+                <ul id="history-list" class="space-y-2"></ul>
+            </div>
         </div>
     </div>
     <!-- Breadcrumb Navigation for Mobile -->
-    <div class="fixed bottom-4 right-4 lg:hidden">
-        <div id="breadcrumb-buttons" class="flex flex-col space-y-2 mb-2">
+    <div class="fixed bottom-4 right-4 lg:hidden flex flex-col items-end">
+        <div id="breadcrumb-buttons" class="flex flex-col space-y-2 mb-2 hidden">
             <button onclick="addValues()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Add</button>
             <button onclick="deleteValue()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Delete</button>
             <button onclick="searchValue()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Search</button>
             <button onclick="undoLastOperation()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Undo</button>
             <button onclick="resetTree()" class="px-4 py-2 font-bold text-white bg-red-500 hover:bg-red-600 rounded shadow-md">Reset Tree</button>
         </div>
-        <button id="toggleBreadcrumb" class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md">
-            <i class="fas fa-bars"></i>
+        <button id="toggleBreadcrumb" title="Toggle Menu" class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md transform transition-transform">
+            <svg id="breadcrumbIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
         </button>
     </div>
-    <!-- Updated to use Cloudflare CDN for Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" defer></script>
     <script src="https://d3js.org/d3.v6.min.js" defer></script>
     <script src="script.js" defer></script>
 </body>
+
 <footer class="fixed bottom-4 left-4 flex items-center space-x-2 lg:hidden">
     <a href="https://github.com/VileEnd/avlTreeExam" target="_blank">
         <img src="github-mark.png" alt="GitHub" class="w-8 h-8 opacity-70">
     </a>
     <span>Made by <a href="https://github.com/VileEnd/avlTreeExam" target="_blank" class="text-blue-500 font-bold">Vileend</a></span>
 </footer>
+
 </html>
