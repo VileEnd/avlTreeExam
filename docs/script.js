@@ -49,6 +49,7 @@ class AVLTree {
     constructor(uiUpdater) {
         this.root = null;
         this.uiUpdater = uiUpdater;
+        this.history = [];
     }
 
     height(node) {
@@ -131,6 +132,76 @@ class AVLTree {
 
     addNode(key) {
         this.root = this.insert(this.root, key);
+        this.history.push({ type: 'add', key: key });
+    }
+
+    deleteNode(key) {
+        this.root = this.delete(this.root, key);
+        this.history.push({ type: 'delete', key: key });
+    }
+
+    delete(root, key) {
+        if (!root) return root;
+
+        if (key < root.key) {
+            root.left = this.delete(root.left, key);
+        } else if (key > root.key) {
+            root.right = this.delete(root.right, key);
+        } else {
+            if (!root.left || !root.right) {
+                root = root.left ? root.left : root.right;
+            } else {
+                const temp = this.getMinValueNode(root.right);
+                root.key = temp.key;
+                root.right = this.delete(root.right, temp.key);
+            }
+        }
+
+        if (!root) return root;
+
+        root.height = 1 + Math.max(this.height(root.left), this.height(root.right));
+        const balance = this.getBalance(root);
+
+        if (balance > 1 && this.getBalance(root.left) >= 0) {
+            return this.rightRotate(root);
+        }
+
+        if (balance > 1 && this.getBalance(root.left) < 0) {
+            root.left = this.leftRotate(root.left);
+            return this.rightRotate(root);
+        }
+
+        if (balance < -1 && this.getBalance(root.right) <= 0) {
+            return this.leftRotate(root);
+        }
+
+        if (balance < -1 && this.getBalance(root.right) > 0) {
+            root.right = this.rightRotate(root.right);
+            return this.leftRotate(root);
+        }
+
+        this.updateNodeDepthAndBalance(root);
+        return root;
+    }
+
+    getMinValueNode(node) {
+        let current = node;
+        while (current.left) current = current.left;
+        return current;
+    }
+
+    undoLastOperation() {
+        const lastOperation = this.history.pop();
+        if (!lastOperation) return;
+
+        if (lastOperation.type === 'add') {
+            this.root = this.delete(this.root, lastOperation.key);
+        } else if (lastOperation.type === 'delete') {
+            this.root = this.insert(this.root, lastOperation.key);
+        }
+
+        renderTree();
+        printTraversals();
     }
 
     printPreOrder(node = this.root, logger = console.log) {
@@ -198,6 +269,29 @@ function addValues() {
     } else {
         alert('Please enter a valid number or list of numbers, separated by commas or spaces.');
     }
+}
+
+function deleteValue() {
+    const valueInput = document.getElementById('valueInput');
+    const value = parseInt(valueInput.value, 10);
+    if (!isNaN(value)) {
+        tree.deleteNode(value);
+
+        let operations = localStorage.getItem('operations');
+        operations = operations ? JSON.parse(operations) : [];
+        operations.push({ type: 'deleteValue', value: value });
+        localStorage.setItem('operations', JSON.stringify(operations));
+
+        valueInput.value = '';
+        renderTree();
+        printTraversals();
+    } else {
+        alert('Please enter a valid number.');
+    }
+}
+
+function undoLastOperation() {
+    tree.undoLastOperation();
 }
 
 function collapse(d) {
@@ -378,7 +472,13 @@ function updateDimensions() {
         .attr("height", height + margin.top + margin.bottom);
 }
 
-window.onresize = updateDimensions;
+window.onresize = () => {
+
+    updateDimensions();
+
+    renderTree();
+
+};
 
 function updateTreeStats() {
     const treeDepth = tree.getDepth();
@@ -426,6 +526,8 @@ function executeSavedOperations() {
                 op.values.forEach(value => {
                     tree.addNode(value);
                 });
+            } else if (op.type === 'deleteValue') {
+                tree.deleteNode(op.value);
             }
         });
         renderTree();
