@@ -4,72 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AVL Tree Visualizer</title>
+    <meta name="description" content="Visualize AVL Trees with ease. Add, delete, and reset values to see how AVL Trees balance themselves.">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            padding: 20px;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f9fafb;
-        }
-        #tree-container {
-            min-height: 500px;
-            max-width: 100%;
-            border: 1px solid #cbd5e0;
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #ffffff;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-            overflow: hidden; /* Ensure no scrolling */
-        }
-        #history-list li {
-            background: #f9f9f9;
-            margin: 5px 0;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button:hover {
-            transition: background-color 0.3s ease;
-        }
-        input:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #3182ce;
-            box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.5);
-        }
-        aside {
-            flex-shrink: 0;
-            background-color: #ffffff;
-            color: #2d3748;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        footer a {
-            opacity: 0.7;
-            transition: opacity 0.3s ease;
-        }
-        footer a:hover {
-            opacity: 1;
-        }
-        footer {
-            color: #a0aec0;
-        }
-        .fixed.bottom-4.right-4 button {
-            background-color: #f56565;
-            transition: background-color 0.3s ease;
-        }
-        .fixed.bottom-4.right-4 button:hover {
-            background-color: #e53e3e;
-        }
-        .fixed.bottom-4.left-4 span {
-            color: #a0aec0;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-900">
     <div class="container mx-auto p-4">
