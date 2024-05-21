@@ -639,31 +639,6 @@ if (savedOperations) {
 }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-const darkModeToggle = document.getElementById('dark-mode-toggle');
-const darkModeIcon = document.getElementById('dark-mode-icon');
-
-// Check for saved user preference, if any, on load of the website
-if (localStorage.getItem('dark-mode') === 'enabled') {
-    document.body.classList.add('dark');
-    darkModeIcon.classList.add('text-gray-200');
-    darkModeIcon.classList.remove('text-gray-800');
-}
-
-darkModeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    if (document.body.classList.contains('dark')) {
-        localStorage.setItem('dark-mode', 'enabled');
-        darkModeIcon.classList.add('text-gray-200');
-        darkModeIcon.classList.remove('text-gray-800');
-    } else {
-        localStorage.setItem('dark-mode', 'disabled');
-        darkModeIcon.classList.add('text-gray-800');
-        darkModeIcon.classList.remove('text-gray-200');
-    }
-});
-});
-
 window.onload = function () {
 uiUpdater = new UIUpdater();
 tree = new AVLTree(uiUpdater);
