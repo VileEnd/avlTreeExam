@@ -37,6 +37,13 @@ textarea:focus {
     box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.5);
 }
 
+input:focus {
+    position: sticky;
+    top: 70px;
+    z-index: 10;
+    background-color: #f9fafb;
+}
+
 @media (max-width: 1024px) {
     .lg\:w-1\/4 {
         width: 100%;
@@ -48,5 +55,9 @@ textarea:focus {
 
     .lg\:space-x-4 {
         margin-top: 10px;
+    }
+    
+    header ul {
+        display: none;
     }
 }

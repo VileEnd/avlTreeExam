@@ -605,11 +605,26 @@ function handleClick() {
 }
 
 toggleOpen.addEventListener('click', handleClick);
-toggleClose.addEventListener('click', handleClick);
 window.onresize = () => {
     updateDimensions();
     renderTree();
 };
+
+document.getElementById('valueInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        addValues();
+    }
+});
+
+document.getElementById('toggleBreadcrumb').addEventListener('click', function () {
+    const buttons = document.getElementById('breadcrumb-buttons');
+    if (buttons.classList.contains('hidden')) {
+        buttons.classList.remove('hidden');
+    } else {
+        buttons.classList.add('hidden');
+    }
+});
 
 function updateTreeStats() {
     const treeDepth = tree.getDepth();
