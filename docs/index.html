@@ -9,44 +9,76 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-900">
-    <div class="container mx-auto p-4">
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="text-3xl font-bold">AVL Tree Visualizer</h1>
-        </div>
-        <div class="mb-4">
-            <input id="valueInput" type="text" placeholder="Enter values..." class="p-2 border border-gray-300 rounded w-full mb-2">
-            <div class="flex space-x-2">
-                <button onclick="addValues()" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded">Add Values</button>
-                <button onclick="deleteValue()" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded">Delete Value</button>
-                <button onclick="searchValue()" class="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded">Search Value</button>
-                <button onclick="resetTree()" class="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded">Reset Tree</button>
-                <button onclick="undoLastOperation()" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded">Undo Last Operation</button>
-            </div>
-        </div>
-        <div id="tree-container" class="border border-gray-300 rounded p-4 mb-4" style="height: 400px;"></div>
-        <div class="mb-4">
-            <textarea id="resultBox" rows="5" class="w-full p-2 border border-gray-300 rounded" readonly></textarea>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div class="p-4 border border-gray-300 rounded">
-                <h2 class="text-xl font-bold mb-2">Rotations</h2>
-                <ul class="list-disc pl-5">
-                    <li>Left Rotations: <span id="left-rotations">0</span></li>
-                    <li>Right Rotations: <span id="right-rotations">0</span></li>
-                    <li>Left-Right Rotations: <span id="left-right-rotations">0</span></li>
-                    <li>Right-Left Rotations: <span id="right-left-rotations">0</span></li>
+    <header class="flex border-b py-4 px-4 sm:px-10 bg-white font-sans min-h-[70px] tracking-wide sticky top-0 z-50">
+        <div class="flex flex-wrap items-center gap-5 w-full">
+            <a href="javascript:void(0)">
+                <img src="https://avatars.githubusercontent.com/u/71889336?v=4" alt="logo" class="w-12 h-12 rounded-full" />
+            </a>
+            <div id="collapseMenu" class="lg:!block w-full lg:w-auto">
+                <button id="toggleClose" class="lg:hidden fixed top-2 right-4 z-[100] rounded-full bg-white p-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 fill-black" viewBox="0 0 320.591 320.591">
+                        <path d="M30.391 318.583a30.37 30.37 0 0 1-21.56-7.288c-11.774-11.844-11.774-30.973 0-42.817L266.643 10.665c12.246-11.459 31.462-10.822 42.921 1.424 10.362 11.074 10.966 28.095 1.414 39.875L51.647 311.295a30.366 30.366 0 0 1-21.256 7.288z" data-original="#000000"></path>
+                        <path d="M287.9 318.583a30.37 30.37 0 0 1-21.257-8.806L8.83 51.963C-2.078 39.225-.595 20.055 12.143 9.146c11.369-9.736 28.136-9.736 39.504 0l259.331 257.813c12.243 11.462 12.876 30.679 1.414 42.922-.456.487-.927.958-1.414 1.414a30.368 30.368 0 0 1-23.078 7.288z" data-original="#000000"></path>
+                    </svg>
+                </button>
+                <ul class="lg:flex lg:ml-14 lg:gap-x-5 max-lg:space-y-3 lg:space-y-0 max-lg:fixed max-lg:bg-white max-lg:w-1/2 max-lg:min-w-[300px] max-lg:top-0 max-lg:left-0 max-lg:p-6 max-lg:h-full max-lg:shadow-md max-lg:overflow-auto z-50">
+                    <li class="max-lg:border-b max-lg:py-3 px-3">
+                        <button onclick="addValues()" class="lg:hover:text-[#007bff] text-[#007bff] block font-semibold text-[15px]">Add Values</button>
+                    </li>
+                    <li class="max-lg:border-b max-lg:py-3 px-3">
+                        <button onclick="deleteValue()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Delete Value</button>
+                    </li>
+                    <li class="max-lg:border-b max-lg:py-3 px-3">
+                        <button onclick="searchValue()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Search Value</button>
+                    </li>
+                    <li class="max-lg:border-b max-lg:py-3 px-3">
+                        <button onclick="resetTree()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Reset Tree</button>
+                    </li>
+                    <li class="max-lg:border-b max-lg:py-3 px-3">
+                        <button onclick="undoLastOperation()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Undo Last Operation</button>
+                    </li>
                 </ul>
             </div>
-            <div class="p-4 border border-gray-300 rounded">
-                <h2 class="text-xl font-bold mb-2">Tree Stats</h2>
-                <ul class="list-disc pl-5">
-                    <li>Tree Depth: <span id="tree-depth">0</span></li>
-                    <li>Tree Complexity: <span id="tree-complexity">0</span></li>
-                </ul>
+            <button id="toggleOpen" class="lg:hidden ml-auto">
+                <svg class="w-7 h-7" fill="#000" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+    <div class="container mx-auto p-4 lg:flex lg:space-x-4">
+        <div class="lg:w-1/4 mb-4 lg:mb-0 p-4 border border-gray-300 rounded">
+            <h2 class="text-xl font-bold mb-2">Rotations</h2>
+            <ul class="list-disc pl-5">
+                <li>Left Rotations: <span id="left-rotations">0</span></li>
+                <li>Right Rotations: <span id="right-rotations">0</span></li>
+                <li>Left-Right Rotations: <span id="left-right-rotations">0</span></li>
+                <li>Right-Left Rotations: <span id="right-left-rotations">0</span></li>
+            </ul>
+            <h2 class="text-xl font-bold mb-2 mt-4">Metrics</h2>
+            <ul class="list-disc pl-5">
+                <li>Comparisons: <span id="comparisons">0</span></li>
+                <li>Operation Time (ms): <span id="operation-time">0.00</span></li>
+            </ul>
+            <h2 class="text-xl font-bold mb-2 mt-4">Tree Stats</h2>
+            <ul class="list-disc pl-5">
+                <li>Tree Depth: <span id="tree-depth">0</span></li>
+                <li>Tree Complexity: <span id="tree-complexity">0</span></li>
+            </ul>
+        </div>
+        <div class="flex-1">
+            <div class="flex justify-center mb-4">
+                <input id="valueInput" type="text" placeholder="Enter values..." class="p-2 border border-gray-300 rounded w-full max-w-md">
+            </div>
+            <div id="tree-container" class="border border-gray-300 rounded p-4 mb-4" style="height: 400px;"></div>
+            <div class="mb-4">
+                <textarea id="resultBox" rows="5" class="w-full p-2 border border-gray-300 rounded" readonly></textarea>
             </div>
         </div>
-        <h2 class="text-xl font-bold mb-2">History</h2>
-        <ul id="history-list" class="space-y-2"></ul>
+        <div class="lg:w-1/4 p-4 border border-gray-300 rounded overflow-y-auto" style="max-height: 600px;">
+            <h2 class="text-xl font-bold mb-2">History</h2>
+            <ul id="history-list" class="space-y-2"></ul>
+        </div>
     </div>
     <script src="https://kit.fontawesome.com/a076d05399.js" defer></script>
     <script src="https://d3js.org/d3.v6.min.js" defer></script>

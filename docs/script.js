@@ -15,6 +15,8 @@ class UIUpdater {
         this.rightRotations = 0;
         this.leftRightRotations = 0;
         this.rightLeftRotations = 0;
+        this.comparisons = 0;
+        this.operationTime = 0;
     }
 
     incrementLeftRotations() {
@@ -37,11 +39,26 @@ class UIUpdater {
         this.updateRotationCount();
     }
 
+    incrementComparisons() {
+        this.comparisons++;
+        this.updateMetrics();
+    }
+
+    setOperationTime(time) {
+        this.operationTime = time;
+        this.updateMetrics();
+    }
+
     updateRotationCount() {
         document.getElementById('left-rotations').textContent = this.leftRotations;
         document.getElementById('right-rotations').textContent = this.rightRotations;
         document.getElementById('left-right-rotations').textContent = this.leftRightRotations;
         document.getElementById('right-left-rotations').textContent = this.rightLeftRotations;
+    }
+
+    updateMetrics() {
+        document.getElementById('comparisons').textContent = this.comparisons;
+        document.getElementById('operation-time').textContent = this.operationTime.toFixed(2);
     }
 }
 
@@ -94,8 +111,9 @@ class AVLTree {
     }
 
     insert(node, key, parent = null) {
+        this.uiUpdater.incrementComparisons();
         if (!node) {
-            this.history.push({ type: 'add', key: key, parent: parent ? parent.key : 'none', reason: 'Inserted as a new node' });
+            this.history.unshift({ type: 'add', key: key, parent: parent ? parent.key : 'none', reason: 'Inserted as a new node' });
             return new AVLNode(key);
         }
         if (key < node.key) {
@@ -110,26 +128,26 @@ class AVLTree {
         const balance = this.getBalance(node);
 
         if (balance > 1 && key < node.left.key) {
-            this.history.push({ type: 'rotation', key: node.key, rotation: 'right', reason: 'Left-Left case' });
+            this.history.unshift({ type: 'rotation', key: node.key, rotation: 'right', reason: 'Left-Left case' });
             return this.rightRotate(node);
         }
 
         if (balance < -1 && key > node.right.key) {
-            this.history.push({ type: 'rotation', key: node.key, rotation: 'left', reason: 'Right-Right case' });
+            this.history.unshift({ type: 'rotation', key: node.key, rotation: 'left', reason: 'Right-Right case' });
             return this.leftRotate(node);
         }
 
         if (balance > 1 && key > node.left.key) {
             node.left = this.leftRotate(node.left);
             this.uiUpdater.incrementLeftRightRotations();
-            this.history.push({ type: 'rotation', key: node.key, rotation: 'left-right', reason: 'Left-Right case' });
+            this.history.unshift({ type: 'rotation', key: node.key, rotation: 'left-right', reason: 'Left-Right case' });
             return this.rightRotate(node);
         }
 
         if (balance < -1 && key < node.right.key) {
             node.right = this.rightRotate(node.right);
             this.uiUpdater.incrementRightLeftRotations();
-            this.history.push({ type: 'rotation', key: node.key, rotation: 'right-left', reason: 'Right-Left case' });
+            this.history.unshift({ type: 'rotation', key: node.key, rotation: 'right-left', reason: 'Right-Left case' });
             return this.leftRotate(node);
         }
 
@@ -138,18 +156,22 @@ class AVLTree {
     }
 
     addNode(key) {
+        const startTime = performance.now();
         this.root = this.insert(this.root, key);
+        const endTime = performance.now();
+        this.uiUpdater.setOperationTime(endTime - startTime);
         this.updateHistory();
     }
 
     search(node, key, path = []) {
+        this.uiUpdater.incrementComparisons();
         if (!node) {
-            this.history.push({ type: 'search', key: key, path: [...path], found: false });
+            this.history.unshift({ type: 'search', key: key, path: [...path], found: false });
             return null;
         }
         path.push(node.key);
         if (key === node.key) {
-            this.history.push({ type: 'search', key: key, path: [...path], found: true });
+            this.history.unshift({ type: 'search', key: key, path: [...path], found: true });
             return node;
         }
         if (key < node.key) {
@@ -160,7 +182,10 @@ class AVLTree {
     }
 
     searchNode(key) {
+        const startTime = performance.now();
         const result = this.search(this.root, key);
+        const endTime = performance.now();
+        this.uiUpdater.setOperationTime(endTime - startTime);
         this.highlightSearchPath(key);
         this.updateHistory();
         return result;
@@ -190,11 +215,15 @@ class AVLTree {
     }
 
     deleteNode(key) {
+        const startTime = performance.now();
         this.root = this.delete(this.root, key);
+        const endTime = performance.now();
+        this.uiUpdater.setOperationTime(endTime - startTime);
         this.updateHistory();
     }
 
     delete(root, key, parent = null) {
+        this.uiUpdater.incrementComparisons();
         if (!root) return root;
 
         if (key < root.key) {
@@ -205,10 +234,10 @@ class AVLTree {
             if (!root.left || !root.right) {
                 const deletedNode = root;
                 root = root.left ? root.left : root.right;
-                this.history.push({ type: 'delete', key: deletedNode.key, parent: parent ? parent.key : 'none', reason: 'Node had one or no children' });
+                this.history.unshift({ type: 'delete', key: deletedNode.key, parent: parent ? parent.key : 'none', reason: 'Node had one or no children' });
             } else {
                 const temp = this.getMinValueNode(root.right);
-                this.history.push({ type: 'delete', key: root.key, parent: parent ? parent.key : 'none', reason: 'Node had two children' });
+                this.history.unshift({ type: 'delete', key: root.key, parent: parent ? parent.key : 'none', reason: 'Node had two children' });
                 root.key = temp.key;
                 root.right = this.delete(root.right, temp.key, root);
             }
@@ -220,24 +249,24 @@ class AVLTree {
         const balance = this.getBalance(root);
 
         if (balance > 1 && this.getBalance(root.left) >= 0) {
-            this.history.push({ type: 'rotation', key: root.key, rotation: 'right', reason: 'Left-Left case' });
+            this.history.unshift({ type: 'rotation', key: root.key, rotation: 'right', reason: 'Left-Left case' });
             return this.rightRotate(root);
         }
 
         if (balance > 1 && this.getBalance(root.left) < 0) {
             root.left = this.leftRotate(root.left);
-            this.history.push({ type: 'rotation', key: root.key, rotation: 'left-right', reason: 'Left-Right case' });
+            this.history.unshift({ type: 'rotation', key: root.key, rotation: 'left-right', reason: 'Left-Right case' });
             return this.rightRotate(root);
         }
 
         if (balance < -1 && this.getBalance(root.right) <= 0) {
-            this.history.push({ type: 'rotation', key: root.key, rotation: 'left', reason: 'Right-Right case' });
+            this.history.unshift({ type: 'rotation', key: root.key, rotation: 'left', reason: 'Right-Right case' });
             return this.leftRotate(root);
         }
 
         if (balance < -1 && this.getBalance(root.right) > 0) {
             root.right = this.rightRotate(root.right);
-            this.history.push({ type: 'rotation', key: root.key, rotation: 'right-left', reason: 'Right-Left case' });
+            this.history.unshift({ type: 'rotation', key: root.key, rotation: 'right-left', reason: 'Right-Left case' });
             return this.leftRotate(root);
         }
 
@@ -252,7 +281,7 @@ class AVLTree {
     }
 
     undoLastOperation() {
-        const lastOperation = this.history.pop();
+        const lastOperation = this.history.shift();
         if (!lastOperation) return;
 
         if (lastOperation.type === 'add') {
@@ -501,149 +530,163 @@ function renderTree() {
         const linkUpdate = linkEnter.merge(link);
 
         linkUpdate.transition()
-        .duration(duration)
-        .attr('d', d => diagonal(d, d.parent))
-        .attr("fill", "none")
-        .style('stroke', 'lightsteelblue')
-        .attr("stroke-width", 2);
+            .duration(duration)
+            .attr('d', d => diagonal(d, d.parent))
+            .attr("fill", "none")
+            .style('stroke', 'lightsteelblue')
+            .attr("stroke-width", 2);
 
-    nodeUpdate.select('circle.node')
-        .attr('r', 10)
-        .style("fill", d => d._children ? "green" : "#fff") // Reset node colors
-        .attr('cursor', 'pointer');
+        nodeUpdate.select('circle.node')
+            .attr('r', 10)
+            .style("fill", d => d._children ? "green" : "#fff") // Reset node colors
+            .attr('cursor', 'pointer');
 
-    const linkExit = link.exit().transition()
-        .duration(duration)
-        .attr('d', d => {
-            const o = { x: source.x, y: source.y };
-            return diagonal(o, o);
-        })
-        .remove();
+        const linkExit = link.exit().transition()
+            .duration(duration)
+            .attr('d', d => {
+                const o = { x: source.x, y: source.y };
+                return diagonal(o, o);
+            })
+            .remove();
 
-    linkExit.select('circle')
-        .attr('r', 1e-6);
+        linkExit.select('circle')
+            .attr('r', 1e-6);
 
-    linkExit.select('text')
-        .style('fill-opacity', 1e-6);
+        linkExit.select('text')
+            .style('fill-opacity', 1e-6);
 
-    nodes.forEach(d => {
-        d.x0 = d.x;
-        d.y0 = d.y;
-    });
+        nodes.forEach(d => {
+            d.x0 = d.x;
+            d.y0 = d.y;
+        });
 
-    function diagonal(s, d) {
-        const path = `M ${s.x} ${s.y}
-            C ${(s.x + d.x) / 2} ${s.y},
-            ${(s.x + d.x) / 2} ${d.y},
-            ${d.x} ${d.y}`;
-        return path;
-    }
-
-    function click(d) {
-        if (d.children) {
-            d._children = d.children;
-            d.children = null;
-        } else {
-            d.children = d._children;
-            d._children = null;
+        function diagonal(s, d) {
+            const path = `M ${s.x} ${s.y}
+                C ${(s.x + d.x) / 2} ${s.y},
+                ${(s.x + d.x) / 2} ${d.y},
+                ${d.x} ${d.y}`;
+            return path;
         }
-        update(d);
-    }
-}
 
-update(rootHierarchy);
+        function click(d) {
+            if (d.children) {
+                d._children = d.children;
+                d.children = null;
+            } else {
+                d.children = d._children;
+                d._children = null;
+            }
+            update(d);
+        }
+    }
+
+    update(rootHierarchy);
 }
 
 function updateDimensions() {
-const margin = { top: 20, right: 20, bottom: 20, left: 20 },
-    width = window.innerWidth - margin.right - margin.left - 40,
-    height = window.innerHeight - margin.top - margin.bottom - 200;
-d3.select("#tree-container svg")
-    .attr("width", width + margin.right + margin.left)
-    .attr("height", height + margin.top + margin.bottom);
+    const margin = { top: 20, right: 20, bottom: 20, left: 20 },
+        width = window.innerWidth - margin.right - margin.left - 40,
+        height = window.innerHeight - margin.top - margin.bottom - 200;
+    d3.select("#tree-container svg")
+        .attr("width", width + margin.right + margin.left)
+        .attr("height", height + margin.top + margin.bottom);
 }
 
+var toggleOpen = document.getElementById('toggleOpen');
+var toggleClose = document.getElementById('toggleClose');
+var collapseMenu = document.getElementById('collapseMenu');
+
+function handleClick() {
+    if (collapseMenu.style.display === 'block') {
+        collapseMenu.style.display = 'none';
+    } else {
+        collapseMenu.style.display = 'block';
+    }
+}
+
+toggleOpen.addEventListener('click', handleClick);
+toggleClose.addEventListener('click', handleClick);
 window.onresize = () => {
-updateDimensions();
-renderTree();
+    updateDimensions();
+    renderTree();
 };
 
 function updateTreeStats() {
-const treeDepth = tree.getDepth();
-const treeComplexity = tree.getComplexity();
+    const treeDepth = tree.getDepth();
+    const treeComplexity = tree.getComplexity();
 
-document.getElementById('tree-depth').textContent = treeDepth;
-document.getElementById('tree-complexity').textContent = treeComplexity;
+    document.getElementById('tree-depth').textContent = treeDepth;
+    document.getElementById('tree-complexity').textContent = treeComplexity;
 }
 
 function printTraversals() {
-let preOrderResult = [];
-let inOrderResult = [];
-let postOrderResult = [];
+    let preOrderResult = [];
+    let inOrderResult = [];
+    let postOrderResult = [];
 
-tree.printPreOrder(undefined, value => preOrderResult.push(value));
-tree.printInOrder(undefined, value => inOrderResult.push(value));
-tree.printPostOrder(undefined, value => postOrderResult.push(value));
-updateTraversalResults(preOrderResult, inOrderResult, postOrderResult);
-updateTreeStats();
+    tree.printPreOrder(undefined, value => preOrderResult.push(value));
+    tree.printInOrder(undefined, value => inOrderResult.push(value));
+    tree.printPostOrder(undefined, value => postOrderResult.push(value));
+    updateTraversalResults(preOrderResult, inOrderResult, postOrderResult);
+    updateTreeStats();
 }
 
 function updateTraversalResults(preOrder, inOrder, postOrder) {
-const resultBox = document.getElementById('resultBox');
-resultBox.value = `Pre-order: ${preOrder}\nIn-order: ${inOrder.join(' ')}\nPost-order: ${postOrder.join(' ')}`;
+    const resultBox = document.getElementById('resultBox');
+    resultBox.value = `Pre-order: ${preOrder}\nIn-order: ${inOrder.join(' ')}\nPost-order: ${postOrder.join(' ')}`;
 }
 
 function resetTree() {
-tree = new AVLTree(uiUpdater);
-uiUpdater = new UIUpdater();
-uiUpdater.updateRotationCount();
-document.getElementById('resultBox').value = '';
-document.getElementById('valueInput').value = '';
+    tree = new AVLTree(uiUpdater);
+    uiUpdater = new UIUpdater();
+    uiUpdater.updateRotationCount();
+    document.getElementById('resultBox').value = '';
+    document.getElementById('valueInput').value = '';
 
-d3.select("#tree-container").select("svg").remove();
+    d3.select("#tree-container").select("svg").remove();
 
-localStorage.removeItem('operations');
-tree.history = [];
-tree.updateHistory();
+    localStorage.removeItem('operations');
+    tree.history = [];
+    tree.updateHistory();
 }
 
 function searchValue() {
-const valueInput = document.getElementById('valueInput');
-const value = parseInt(valueInput.value, 10);
-if (!isNaN(value)) {
-    const result = tree.searchNode(value);
-    if (result) {
-        alert(`Node with key ${value} found.`);
+    const valueInput = document.getElementById('valueInput');
+    const value = parseInt(valueInput.value, 10);
+    if (!isNaN(value)) {
+        const result = tree.searchNode(value);
+        if (result) {
+            alert(`Node with key ${value} found.`);
+        } else {
+            alert(`Node with key ${value} not found.`);
+        }
     } else {
-        alert(`Node with key ${value} not found.`);
+        alert('Please enter a valid number.');
     }
-} else {
-    alert('Please enter a valid number.');
-}
 }
 
 function executeSavedOperations() {
-const savedOperations = localStorage.getItem('operations');
-if (savedOperations) {
-    const operations = JSON.parse(savedOperations);
-    operations.forEach(op => {
-        if (op.type === 'addValues') {
-            op.values.forEach(value => {
-                tree.addNode(value);
-            });
-        } else if (op.type === 'deleteValue') {
-            tree.deleteNode(op.value);
-        }
-    });
-    renderTree();
-}
+    const savedOperations = localStorage.getItem('operations');
+    if (savedOperations) {
+        const operations = JSON.parse(savedOperations);
+        operations.forEach(op => {
+            if (op.type === 'addValues') {
+                op.values.forEach(value => {
+                    tree.addNode(value);
+                });
+            } else if (op.type === 'deleteValue') {
+                tree.deleteNode(op.value);
+            }
+        });
+        renderTree();
+    }
 }
 
 window.onload = function () {
-uiUpdater = new UIUpdater();
-tree = new AVLTree(uiUpdater);
-executeSavedOperations();
-updateDimensions();
-printTraversals();
-updateTreeStats();
+    uiUpdater = new UIUpdater();
+    tree = new AVLTree(uiUpdater);
+    executeSavedOperations();
+    updateDimensions();
+    printTraversals();
+    updateTreeStats();
 };
