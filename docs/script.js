@@ -399,7 +399,7 @@ function renderTree() {
     const margin = { top: 20, right: 40, bottom: 150, left: 10 };
     const container = d3.select("#tree-container").node().getBoundingClientRect();
     const width = container.width - margin.right - margin.left;
-    const height = container.height - margin.top - margin.bottom;
+    const height = container.height- margin.top - margin.bottom;
 
     // Remove any existing SVG element inside #tree-container
     d3.select("#tree-container").select("svg").remove();
@@ -411,8 +411,7 @@ function renderTree() {
         .call(zoom)  // Apply zoom behavior
         .append("g")
         .attr("id", "svg-content")
-        .attr("transform", currentTransform);  // Apply current transform
-
+        .attr("transform", currentTransform);
     const treemap = d3.tree().size([height, width]);
 
     const rootHierarchy = d3.hierarchy(tree.root, d => [d.left, d.right].filter(d => d));
