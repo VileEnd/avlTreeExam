@@ -142,6 +142,49 @@ class AVLTree {
         this.updateHistory();
     }
 
+    search(node, key) {
+        if (!node) {
+            return null;
+        }
+        if (key === node.key) {
+            return node;
+        }
+        if (key < node.key) {
+            return this.search(node.left, key);
+        } else {
+            return this.search(node.right, key);
+        }
+    }
+
+    searchNode(key) {
+        const result = this.search(this.root, key);
+        this.highlightSearchPath(key);
+        return result;
+    }
+
+    highlightSearchPath(key) {
+        const path = [];
+        let current = this.root;
+        while (current) {
+            path.push(current.key);
+            if (key === current.key) {
+                break;
+            }
+            if (key < current.key) {
+                current = current.left;
+            } else {
+                current = current.right;
+            }
+        }
+        this.updateSearchPath(path);
+    }
+
+    updateSearchPath(path) {
+        const nodes = d3.selectAll('g.node');
+        nodes.selectAll('circle')
+            .style("fill", d => path.includes(d.data.key) ? "yellow" : (d._children ? "green" : "#fff"));
+    }
+
     deleteNode(key) {
         this.root = this.delete(this.root, key);
         this.updateHistory();
@@ -457,6 +500,11 @@ function renderTree() {
             .attr("fill", "none")
             .style('stroke', 'lightsteelblue')
             .attr("stroke-width", 2);
+        
+        nodeUpdate.select('circle.node')
+        .attr('r', 10)
+        .style("fill", d => d._children ? "green" : "#fff") // Reset node colors
+        .attr('cursor', 'pointer');
 
         link.exit().transition()
             .duration(duration)
@@ -545,6 +593,21 @@ function resetTree() {
     localStorage.removeItem('operations');
     tree.history= [];
     tree.updateHistory();
+}
+
+function searchValue() {
+    const valueInput = document.getElementById('valueInput');
+    const value = parseInt(valueInput.value, 10);
+    if (!isNaN(value)) {
+        const result = tree.searchNode(value);
+        if (result) {
+            alert(`Node with key ${value} found.`);
+        } else {
+            alert(`Node with key ${value} not found.`);
+        }
+    } else {
+        alert('Please enter a valid number.');
+    }
 }
 
 function executeSavedOperations() {
