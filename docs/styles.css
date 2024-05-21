@@ -5,28 +5,18 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #090b0e;
-}
-
-.dark body {
-    background-color: #1a202c;
+    background-color: #f9fafb;
 }
 
 #tree-container {
     min-height: 500px;
     max-width: 100%;
-    overflow-x: auto;
-    overflow-y: auto;
     border: 1px solid #cbd5e0;
     margin-bottom: 20px;
     padding: 10px;
     background-color: #ffffff;
     transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.dark #tree-container {
-    background-color: #2d3748;
-    border-color: #4a5568;
+    overflow: hidden; /* Ensure no scrolling */
 }
 
 #history-list li {
@@ -35,51 +25,6 @@ body {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-}
-
-.dark #history-list li {
-    background: #2d3748;
-    border-color: #4a5568;
-}
-
-.dark .bg-gray-200 {
-    background-color: #2d3748;
-}
-
-.dark .bg-gray-300 {
-    background-color: #2d3748;
-}
-
-.dark .bg-blue-500 {
-    background-color: #4299e1;
-}
-
-.dark .bg-red-500 {
-    background-color: #f56565;
-}
-
-.dark .bg-yellow-500 {
-    background-color: #ecc94b;
-}
-
-.dark .bg-green-500 {
-    background-color: #48bb78;
-}
-
-.dark .bg-purple-500 {
-    background-color: #9f7aea;
-}
-
-.dark .text-white {
-    color: #e2e8f0;
-}
-
-.dark .border-gray-300 {
-    border-color: #4a5568;
-}
-
-.dark .focus\:ring-blue-500 {
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
 }
 
 button:hover {
@@ -93,16 +38,10 @@ textarea:focus {
     box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.5);
 }
 
-.dark input:focus,
-.dark textarea:focus {
-    border-color: #63b3ed;
-    box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.5);
-}
-
 aside {
     flex-shrink: 0;
-    background-color: #2d3748;
-    color: #e2e8f0;
+    background-color: #ffffff;
+    color: #2d3748;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -118,10 +57,6 @@ footer a:hover {
 }
 
 footer {
-    color: #a0aec0;
-}
-
-.dark footer {
     color: #a0aec0;
 }
 
