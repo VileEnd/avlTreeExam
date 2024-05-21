@@ -142,23 +142,27 @@ class AVLTree {
         this.updateHistory();
     }
 
-    search(node, key) {
+    search(node, key, path = []) {
         if (!node) {
+            this.history.push({ type: 'search', key: key, path: [...path], found: false });
             return null;
         }
+        path.push(node.key);
         if (key === node.key) {
+            this.history.push({ type: 'search', key: key, path: [...path], found: true });
             return node;
         }
         if (key < node.key) {
-            return this.search(node.left, key);
+            return this.search(node.left, key, path);
         } else {
-            return this.search(node.right, key);
+            return this.search(node.right, key, path);
         }
     }
 
     searchNode(key) {
         const result = this.search(this.root, key);
         this.highlightSearchPath(key);
+        this.updateHistory();
         return result;
     }
 
@@ -182,7 +186,7 @@ class AVLTree {
     updateSearchPath(path) {
         const nodes = d3.selectAll('g.node');
         nodes.selectAll('circle')
-            .style("fill", d => path.includes(d.data.key) ? "yellow" : (d._children ? "green" : "#fff"));
+            .style("fill", d => path.includes(d.data.key) ? "red" : (d._children ? "green" : "#fff"));
     }
 
     deleteNode(key) {
@@ -273,6 +277,8 @@ class AVLTree {
                 listItem.textContent = `Deleted node with key ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
             } else if (operation.type === 'rotation') {
                 listItem.textContent = `Performed ${operation.rotation} rotation on node with key ${operation.key}. Reason: ${operation.reason}`;
+            } else if (operation.type === 'search') {
+                listItem.textContent = `Searched for node with key ${operation.key}. Path: ${operation.path.join(' -> ')}. ${operation.found ? 'Node found.' : 'Node not found.'}`;
             }
             historyList.appendChild(listItem);
         });
@@ -495,37 +501,42 @@ function renderTree() {
         const linkUpdate = linkEnter.merge(link);
 
         linkUpdate.transition()
-            .duration(duration)
-            .attr('d', d => diagonal(d, d.parent))
-            .attr("fill", "none")
-            .style('stroke', 'lightsteelblue')
-            .attr("stroke-width", 2);
-        
-        nodeUpdate.select('circle.node')
+        .duration(duration)
+        .attr('d', d => diagonal(d, d.parent))
+        .attr("fill", "none")
+        .style('stroke', 'lightsteelblue')
+        .attr("stroke-width", 2);
+
+    nodeUpdate.select('circle.node')
         .attr('r', 10)
         .style("fill", d => d._children ? "green" : "#fff") // Reset node colors
         .attr('cursor', 'pointer');
 
-        link.exit().transition()
-            .duration(duration)
-            .attr('d', d => {
-                const o = { x: source.x, y: source.y };
-                return diagonal(o, o);
-            })
-            .remove();
+    const linkExit = link.exit().transition()
+        .duration(duration)
+        .attr('d', d => {
+            const o = { x: source.x, y: source.y };
+            return diagonal(o, o);
+        })
+        .remove();
 
-        nodes.forEach(d => {
-            d.x0 = d.x;
-            d.y0 = d.y;
-        });
+    linkExit.select('circle')
+        .attr('r', 1e-6);
 
-        function diagonal(s, d) {
-            const path = `M ${s.x} ${s.y}
-                C ${(s.x + d.x) / 2} ${s.y},
-                ${(s.x + d.x) / 2} ${d.y},
-                ${d.x} ${d.y}`;
-            return path;
-        }
+    linkExit.select('text')
+        .style('fill-opacity', 1e-6);
+
+    nodes.forEach(d => {
+        d.x0 = d.x;
+        d.y0 = d.y;
+    });
+
+    function diagonal(s, d) {
+        const path = `M ${s.x} ${s.y}
+            C ${(s.x + d.x) / 2} ${s.y},
+            ${(s.x + d.x) / 2} ${d.y},
+            ${d.x} ${d.y}`;
+        return path;
     }
 
     function click(d) {
@@ -538,124 +549,126 @@ function renderTree() {
         }
         update(d);
     }
+}
 
-    update(rootHierarchy);
+update(rootHierarchy);
 }
 
 function updateDimensions() {
-    const margin = { top: 20, right: 20, bottom: 20, left: 20 },
-        width = window.innerWidth - margin.right - margin.left - 40,
-        height = window.innerHeight - margin.top - margin.bottom - 200;
-    d3.select("#tree-container svg")
-        .attr("width", width + margin.right + margin.left)
-        .attr("height", height + margin.top + margin.bottom);
+const margin = { top: 20, right: 20, bottom: 20, left: 20 },
+    width = window.innerWidth - margin.right - margin.left - 40,
+    height = window.innerHeight - margin.top - margin.bottom - 200;
+d3.select("#tree-container svg")
+    .attr("width", width + margin.right + margin.left)
+    .attr("height", height + margin.top + margin.bottom);
 }
 
 window.onresize = () => {
-    updateDimensions();
-    renderTree();
+updateDimensions();
+renderTree();
 };
 
 function updateTreeStats() {
-    const treeDepth = tree.getDepth();
-    const treeComplexity = tree.getComplexity();
+const treeDepth = tree.getDepth();
+const treeComplexity = tree.getComplexity();
 
-    document.getElementById('tree-depth').textContent = treeDepth;
-    document.getElementById('tree-complexity').textContent = treeComplexity;
+document.getElementById('tree-depth').textContent = treeDepth;
+document.getElementById('tree-complexity').textContent = treeComplexity;
 }
 
 function printTraversals() {
-    let preOrderResult = [];
-    let inOrderResult = [];
-    let postOrderResult = [];
+let preOrderResult = [];
+let inOrderResult = [];
+let postOrderResult = [];
 
-    tree.printPreOrder(undefined, value => preOrderResult.push(value));
-    tree.printInOrder(undefined, value => inOrderResult.push(value));
-    tree.printPostOrder(undefined, value => postOrderResult.push(value));
-    updateTraversalResults(preOrderResult, inOrderResult, postOrderResult);
-    updateTreeStats();
+tree.printPreOrder(undefined, value => preOrderResult.push(value));
+tree.printInOrder(undefined, value => inOrderResult.push(value));
+tree.printPostOrder(undefined, value => postOrderResult.push(value));
+updateTraversalResults(preOrderResult, inOrderResult, postOrderResult);
+updateTreeStats();
 }
 
 function updateTraversalResults(preOrder, inOrder, postOrder) {
-    const resultBox = document.getElementById('resultBox');
-    resultBox.value = `Pre-order: ${preOrder}\nIn-order: ${inOrder.join(' ')}\nPost-order: ${postOrder.join(' ')}`;
+const resultBox = document.getElementById('resultBox');
+resultBox.value = `Pre-order: ${preOrder}\nIn-order: ${inOrder.join(' ')}\nPost-order: ${postOrder.join(' ')}`;
 }
 
 function resetTree() {
-    tree = new AVLTree(uiUpdater);
-    uiUpdater = new UIUpdater();
-    uiUpdater.updateRotationCount();
-    document.getElementById('resultBox').value = '';
-    document.getElementById('valueInput').value = '';
+tree = new AVLTree(uiUpdater);
+uiUpdater = new UIUpdater();
+uiUpdater.updateRotationCount();
+document.getElementById('resultBox').value = '';
+document.getElementById('valueInput').value = '';
 
-    d3.select("#tree-container").select("svg").remove();
+d3.select("#tree-container").select("svg").remove();
 
-    localStorage.removeItem('operations');
-    tree.history= [];
-    tree.updateHistory();
+localStorage.removeItem('operations');
+tree.history = [];
+tree.updateHistory();
 }
 
 function searchValue() {
-    const valueInput = document.getElementById('valueInput');
-    const value = parseInt(valueInput.value, 10);
-    if (!isNaN(value)) {
-        const result = tree.searchNode(value);
-        if (result) {
-            alert(`Node with key ${value} found.`);
-        } else {
-            alert(`Node with key ${value} not found.`);
-        }
+const valueInput = document.getElementById('valueInput');
+const value = parseInt(valueInput.value, 10);
+if (!isNaN(value)) {
+    const result = tree.searchNode(value);
+    if (result) {
+        alert(`Node with key ${value} found.`);
     } else {
-        alert('Please enter a valid number.');
+        alert(`Node with key ${value} not found.`);
     }
+} else {
+    alert('Please enter a valid number.');
+}
 }
 
 function executeSavedOperations() {
-    const savedOperations = localStorage.getItem('operations');
-    if (savedOperations) {
-        const operations = JSON.parse(savedOperations);
-        operations.forEach(op => {
-            if (op.type === 'addValues') {
-                op.values.forEach(value => {
-                    tree.addNode(value);
-                });
-            } else if (op.type === 'deleteValue') {
-                tree.deleteNode(op.value);
-            }
-        });
-        renderTree();
-    }
-}
-document.addEventListener('DOMContentLoaded', () => {
-    const darkModeToggle = document.getElementById('dark-mode-toggle');
-    const darkModeIcon = document.getElementById('dark-mode-icon');
-
-    // Check for saved user preference, if any, on load of the website
-    if (localStorage.getItem('dark-mode') === 'enabled') {
-        document.body.classList.add('dark');
-        darkModeIcon.classList.add('text-gray-200');
-        darkModeIcon.classList.remove('text-gray-800');
-    }
-
-    darkModeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark');
-        if (document.body.classList.contains('dark')) {
-            localStorage.setItem('dark-mode', 'enabled');
-            darkModeIcon.classList.add('text-gray-200');
-            darkModeIcon.classList.remove('text-gray-800');
-        } else {
-            localStorage.setItem('dark-mode', 'disabled');
-            darkModeIcon.classList.add('text-gray-800');
-            darkModeIcon.classList.remove('text-gray-200');
+const savedOperations = localStorage.getItem('operations');
+if (savedOperations) {
+    const operations = JSON.parse(savedOperations);
+    operations.forEach(op => {
+        if (op.type === 'addValues') {
+            op.values.forEach(value => {
+                tree.addNode(value);
+            });
+        } else if (op.type === 'deleteValue') {
+            tree.deleteNode(op.value);
         }
     });
+    renderTree();
+}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+const darkModeToggle = document.getElementById('dark-mode-toggle');
+const darkModeIcon = document.getElementById('dark-mode-icon');
+
+// Check for saved user preference, if any, on load of the website
+if (localStorage.getItem('dark-mode') === 'enabled') {
+    document.body.classList.add('dark');
+    darkModeIcon.classList.add('text-gray-200');
+    darkModeIcon.classList.remove('text-gray-800');
+}
+
+darkModeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    if (document.body.classList.contains('dark')) {
+        localStorage.setItem('dark-mode', 'enabled');
+        darkModeIcon.classList.add('text-gray-200');
+        darkModeIcon.classList.remove('text-gray-800');
+    } else {
+        localStorage.setItem('dark-mode', 'disabled');
+        darkModeIcon.classList.add('text-gray-800');
+        darkModeIcon.classList.remove('text-gray-200');
+    }
 });
-window.addEventListener('resize', renderTree);
+});
+
 window.onload = function () {
-    uiUpdater = new UIUpdater();
-    tree = new AVLTree(uiUpdater);
-    executeSavedOperations();
-    updateDimensions();
-    printTraversals();
-    updateTreeStats();
+uiUpdater = new UIUpdater();
+tree = new AVLTree(uiUpdater);
+executeSavedOperations();
+updateDimensions();
+printTraversals();
+updateTreeStats();
 };
