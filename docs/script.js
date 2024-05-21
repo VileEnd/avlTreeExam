@@ -93,12 +93,15 @@ class AVLTree {
         return node ? node.depth : -1;
     }
 
-    insert(node, key) {
-        if (!node) return new AVLNode(key);
+    insert(node, key, parent = null) {
+        if (!node) {
+            this.history.push({ type: 'add', key: key, parent: parent ? parent.key : 'none', reason: 'Inserted as a new node' });
+            return new AVLNode(key);
+        }
         if (key < node.key) {
-            node.left = this.insert(node.left, key);
+            node.left = this.insert(node.left, key, node);
         } else if (key > node.key) {
-            node.right = this.insert(node.right, key);
+            node.right = this.insert(node.right, key, node);
         } else {
             return node;
         }
@@ -107,22 +110,26 @@ class AVLTree {
         const balance = this.getBalance(node);
 
         if (balance > 1 && key < node.left.key) {
+            this.history.push({ type: 'rotation', key: node.key, rotation: 'right', reason: 'Left-Left case' });
             return this.rightRotate(node);
         }
 
         if (balance < -1 && key > node.right.key) {
+            this.history.push({ type: 'rotation', key: node.key, rotation: 'left', reason: 'Right-Right case' });
             return this.leftRotate(node);
         }
 
         if (balance > 1 && key > node.left.key) {
             node.left = this.leftRotate(node.left);
             this.uiUpdater.incrementLeftRightRotations();
+            this.history.push({ type: 'rotation', key: node.key, rotation: 'left-right', reason: 'Left-Right case' });
             return this.rightRotate(node);
         }
 
         if (balance < -1 && key < node.right.key) {
             node.right = this.rightRotate(node.right);
             this.uiUpdater.incrementRightLeftRotations();
+            this.history.push({ type: 'rotation', key: node.key, rotation: 'right-left', reason: 'Right-Left case' });
             return this.leftRotate(node);
         }
 
@@ -132,30 +139,31 @@ class AVLTree {
 
     addNode(key) {
         this.root = this.insert(this.root, key);
-        this.history.push({ type: 'add', key: key });
         this.updateHistory();
     }
 
     deleteNode(key) {
         this.root = this.delete(this.root, key);
-        this.history.push({ type: 'delete', key: key });
         this.updateHistory();
     }
 
-    delete(root, key) {
+    delete(root, key, parent = null) {
         if (!root) return root;
 
         if (key < root.key) {
-            root.left = this.delete(root.left, key);
+            root.left = this.delete(root.left, key, root);
         } else if (key > root.key) {
-            root.right = this.delete(root.right, key);
+            root.right = this.delete(root.right, key, root);
         } else {
             if (!root.left || !root.right) {
+                const deletedNode = root;
                 root = root.left ? root.left : root.right;
+                this.history.push({ type: 'delete', key: deletedNode.key, parent: parent ? parent.key : 'none', reason: 'Node had one or no children' });
             } else {
                 const temp = this.getMinValueNode(root.right);
+                this.history.push({ type: 'delete', key: root.key, parent: parent ? parent.key : 'none', reason: 'Node had two children' });
                 root.key = temp.key;
-                root.right = this.delete(root.right, temp.key);
+                root.right = this.delete(root.right, temp.key, root);
             }
         }
 
@@ -165,20 +173,24 @@ class AVLTree {
         const balance = this.getBalance(root);
 
         if (balance > 1 && this.getBalance(root.left) >= 0) {
+            this.history.push({ type: 'rotation', key: root.key, rotation: 'right', reason: 'Left-Left case' });
             return this.rightRotate(root);
         }
 
         if (balance > 1 && this.getBalance(root.left) < 0) {
             root.left = this.leftRotate(root.left);
+            this.history.push({ type: 'rotation', key: root.key, rotation: 'left-right', reason: 'Left-Right case' });
             return this.rightRotate(root);
         }
 
         if (balance < -1 && this.getBalance(root.right) <= 0) {
+            this.history.push({ type: 'rotation', key: root.key, rotation: 'left', reason: 'Right-Right case' });
             return this.leftRotate(root);
         }
 
         if (balance < -1 && this.getBalance(root.right) > 0) {
             root.right = this.rightRotate(root.right);
+            this.history.push({ type: 'rotation', key: root.key, rotation: 'right-left', reason: 'Right-Left case' });
             return this.leftRotate(root);
         }
 
@@ -212,7 +224,13 @@ class AVLTree {
         historyList.innerHTML = '';
         this.history.forEach(operation => {
             const listItem = document.createElement('li');
-            listItem.textContent = `${operation.type === 'add' ? 'Added' : 'Deleted'} node with key ${operation.key}`;
+            if (operation.type === 'add') {
+                listItem.textContent = `Added node with key ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
+            } else if (operation.type === 'delete') {
+                listItem.textContent = `Deleted node with key ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
+            } else if (operation.type === 'rotation') {
+                listItem.textContent = `Performed ${operation.rotation} rotation on node with key ${operation.key}. Reason: ${operation.reason}`;
+            }
             historyList.appendChild(listItem);
         });
     }
@@ -525,6 +543,8 @@ function resetTree() {
     d3.select("#tree-container").select("svg").remove();
 
     localStorage.removeItem('operations');
+    tree.history= [];
+    tree.updateHistory();
 }
 
 function executeSavedOperations() {
