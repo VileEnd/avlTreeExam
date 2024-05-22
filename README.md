@@ -29,4 +29,4 @@ This repository contains an AVL tree implementation in JavaScript and Java. It p
 Pull requests are welcome. For significant changes, please open an issue first to discuss what you would like to change.
 
 ## 📜 License 📜
-GNU v3
+GPL-3.0
