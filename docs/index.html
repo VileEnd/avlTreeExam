@@ -41,6 +41,9 @@
                 <li class="max-lg:border-b max-lg:py-3 px-3">
                     <button onclick="undoLastOperation()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Undo Last Operation</button>
                 </li>
+                <li class="max-lg:border-b max-lg:py-3 px-3">
+                    <button onclick="recenterTree()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Recenter Tree</button>
+                </li>
             </ul>
         </div>
     </header>
@@ -69,7 +72,7 @@
         </div>
         <div class="flex-1 p-4 lg:w-3/5">
             <div class="flex justify-center mb-4 sticky top-[70px] bg-gray-100 z-10 p-4">
-                <input id="valueInput" type="number" placeholder="Enter values..." class="p-2 border border-gray-300 rounded w-full max-w-md bg-white">
+                <input id="valueInput" type="text" placeholder="Enter values..." class="p-2 border border-gray-300 rounded w-full max-w-md bg-white">
             </div>
             <div id="tree-container" class="relative border border-gray-300 rounded p-4 mb-4 flex items-center justify-center" style="height: 400px; max-width: 100%; overflow-x: hidden;">
             </div>
@@ -110,6 +113,7 @@
             <button onclick="searchValue()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Search</button>
             <button onclick="undoLastOperation()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Undo</button>
             <button onclick="resetTree()" class="px-4 py-2 font-bold text-white bg-red-500 hover:bg-red-600 rounded shadow-md">Reset Tree</button>
+            <button onclick="recenterTree()" class="px-4 py-2 font-bold text-white bg-green-500 hover:bg-green-600 rounded shadow-md">Recenter</button>
         </div>
         <button id="toggleBreadcrumb" title="Toggle Menu" class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md transform transition-transform">
             <svg id="breadcrumbIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

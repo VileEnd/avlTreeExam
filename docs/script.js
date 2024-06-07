@@ -613,6 +613,11 @@ function showWelcomeMessage() {
     });
 }
 
+function recenterTree() {
+    currentTransform = d3.zoomIdentity;
+    d3.select("#tree-container").select("svg").call(zoom.transform, currentTransform);
+}
+
 function saveZoomState() {
     const zoomState = {
         transform: currentTransform,
