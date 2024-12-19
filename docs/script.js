@@ -2,11 +2,95 @@ let zoomLevel = 1;  // Declare zoomLevel at the top
 const zoomStep = 0.1;
 let currentTransform = d3.zoomIdentity;
 
+// Global variable to enable/disable animations
+let animationsEnabled = true;
+
 const zoom = d3.zoom().on("zoom", function (event) {
     currentTransform = event.transform;
     d3.select("#svg-content").attr("transform", currentTransform);
-    saveZoomState();
 });
+
+function wait(ms) {
+    if (!animationsEnabled) {
+        // If animations are disabled, return immediately
+        return Promise.resolve();
+    }
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+let pointer = null; // Pointer circle reference
+
+function getNodePosition(key) {
+    const nodes = d3.selectAll('g.node');
+    let found = null;
+    nodes.each(function(d) {
+        if (d.data && d.data.key === key) {
+            const node = d3.select(this);
+            const transform = node.attr("transform");
+            const match = /translate\(([^,]+),([^,]+)\)/.exec(transform);
+            if (match) {
+                const x = parseFloat(match[1]);
+                const y = parseFloat(match[2]);
+                found = {x,y};
+            }
+        }
+    });
+    return found;
+}
+
+async function highlightNode(key, color) {
+    const nodes = d3.selectAll('g.node circle');
+    const selection = nodes.filter(d => d.data.key === key);
+    if (!animationsEnabled) {
+        // No animation, set color instantly
+        selection.style("fill", color);
+        return;
+    }
+    selection.transition().duration(100)
+        .style("fill", color);
+    await wait(100);
+}
+
+async function revertNodeColor(key) {
+    const nodes = d3.selectAll('g.node circle');
+    const selection = nodes.filter(d => d.data.key === key);
+    if (!animationsEnabled) {
+        // No animation
+        selection.style("fill", d => d._children ? "green" : "#fff");
+        return;
+    }
+    selection.transition().duration(100)
+        .style("fill", d => d._children ? "green" : "#fff");
+    await wait(100);
+}
+
+async function showPointerAtNode(key, message) {
+    appendStepMessage(message);
+    if (!pointer) return; 
+    const pos = getNodePosition(key);
+    if (pos) {
+        pointer.style("display", "block");
+        if (!animationsEnabled) {
+            pointer.attr("cx", pos.x)
+                   .attr("cy", pos.y);
+            return;
+        }
+        pointer.transition().duration(500)
+            .attr("cx", pos.x)
+            .attr("cy", pos.y);
+        await wait(600); // Wait a bit after moving pointer
+    }
+}
+
+function appendStepMessage(msg) {
+    const stepsBox = document.getElementById('stepsBox');
+    if (stepsBox) {
+        const p = document.createElement('p');
+        p.textContent = msg;
+        stepsBox.appendChild(p);
+        stepsBox.scrollTop = stepsBox.scrollHeight; // Auto scroll
+    }
+}
 
 class AVLNode {
     constructor(key) {
@@ -40,7 +124,7 @@ class UIUpdater {
     }
 
     setOperationTime(time) {
-        this.operationTime = time;
+        this.operationTime = time.toFixed(2);
         this.updateMetrics(['operation-time']);
     }
 
@@ -51,7 +135,14 @@ class UIUpdater {
     }
 
     updateAllMetrics() {
-        this.updateMetrics(['left-rotations', 'right-rotations', 'left-right-rotations', 'right-left-rotations', 'comparisons', 'operation-time']);
+        this.updateMetrics([
+            'left-rotations', 
+            'right-rotations', 
+            'left-right-rotations', 
+            'right-left-rotations', 
+            'comparisons', 
+            'operation-time'
+        ]);
     }
 }
 
@@ -66,7 +157,15 @@ class AVLTree {
         return node ? node.height : 0;
     }
 
-    rotate(node, direction) {
+    async rotate(node, direction, reasonDetail) {
+        appendStepMessage(`Imbalance detected at node ${node.key}. Highlighting before rotation...`);
+        await showPointerAtNode(node.key, `Node ${node.key} needs a ${direction.toUpperCase()} rotation due to ${reasonDetail}.`);
+        await highlightNode(node.key, "orange");
+        if (animationsEnabled) {
+            await wait(1500);
+        }
+        await revertNodeColor(node.key);
+
         const opposite = direction === 'left' ? 'right' : 'left';
         const temp = node[opposite];
         node[opposite] = temp[direction];
@@ -75,6 +174,18 @@ class AVLTree {
         node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
         temp.height = 1 + Math.max(this.height(temp.left), this.height(temp.right));
         this.uiUpdater.incrementCounter(`${direction}Rotations`);
+
+        appendStepMessage(`Performing a ${direction.toUpperCase()} rotation on node ${node.key} due to ${reasonDetail}.`);
+        
+        // Re-render after rotation
+        renderTree();
+        
+        await showPointerAtNode(temp.key, `Rotation completed. Now ${temp.key} is balanced here.`);
+        await highlightNode(temp.key, "yellow");
+        if (animationsEnabled) {
+            await wait(1500);
+        }
+        await revertNodeColor(temp.key);
 
         return temp;
     }
@@ -96,19 +207,30 @@ class AVLTree {
         return node ? node.depth : -1;
     }
 
-    insert(node, key, parent = null) {
+    async insert(node, key, parent = null) {
         this.uiUpdater.incrementCounter('comparisons');
         if (!node) {
+            appendStepMessage(`Inserting key ${key}${parent ? ' under parent ' + parent.key : ' as root'}.`);
             this.history.unshift({ type: 'add', key, parent: parent ? parent.key : 'none', reason: 'Inserted as a new node' });
             return new AVLNode(key);
         }
 
+        await showPointerAtNode(node.key, `Comparing ${key} with ${node.key}`);
+        await highlightNode(node.key, "orange");
+        if (animationsEnabled) {
+            await wait(1500);
+        }
+        await revertNodeColor(node.key);
+
         if (key < node.key) {
-            node.left = this.insert(node.left, key, node);
+            appendStepMessage(`Key ${key} < ${node.key}, going LEFT.`);
+            node.left = await this.insert(node.left, key, node);
         } else if (key > node.key) {
-            node.right = this.insert(node.right, key, node);
+            appendStepMessage(`Key ${key} > ${node.key}, going RIGHT.`);
+            node.right = await this.insert(node.right, key, node);
         } else {
-            return node;
+            appendStepMessage(`Key ${key} already exists. No insertion performed.`);
+            return node; 
         }
 
         node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
@@ -117,26 +239,30 @@ class AVLTree {
         if (balance > 1) {
             if (key < node.left.key) {
                 this.history.unshift({ type: 'rotation', key: node.key, rotation: 'right', reason: 'Left-Left case' });
-                return this.rotate(node, 'right');
+                appendStepMessage(`Left-Left imbalance at ${node.key}, performing RIGHT rotation.`);
+                return await this.rotate(node, 'right', 'Left-Left imbalance');
             }
             if (key > node.left.key) {
-                node.left = this.rotate(node.left, 'left');
+                node.left = await this.rotate(node.left, 'left', 'Left-Right inner step');
                 this.uiUpdater.incrementCounter('leftRightRotations');
                 this.history.unshift({ type: 'rotation', key: node.key, rotation: 'left-right', reason: 'Left-Right case' });
-                return this.rotate(node, 'right');
+                appendStepMessage(`Left-Right imbalance at ${node.key}, performing LEFT-RIGHT rotation steps.`);
+                return await this.rotate(node, 'right', 'Completing Left-Right imbalance');
             }
         }
 
         if (balance < -1) {
             if (key > node.right.key) {
                 this.history.unshift({ type: 'rotation', key: node.key, rotation: 'left', reason: 'Right-Right case' });
-                return this.rotate(node, 'left');
+                appendStepMessage(`Right-Right imbalance at ${node.key}, performing LEFT rotation.`);
+                return await this.rotate(node, 'left', 'Right-Right imbalance');
             }
             if (key < node.right.key) {
-                node.right = this.rotate(node.right, 'right');
+                node.right = await this.rotate(node.right, 'right', 'Right-Left inner step');
                 this.uiUpdater.incrementCounter('rightLeftRotations');
                 this.history.unshift({ type: 'rotation', key: node.key, rotation: 'right-left', reason: 'Right-Left case' });
-                return this.rotate(node, 'left');
+                appendStepMessage(`Right-Left imbalance at ${node.key}, performing RIGHT-LEFT rotation steps.`);
+                return await this.rotate(node, 'left', 'Completing Right-Left imbalance');
             }
         }
 
@@ -144,12 +270,18 @@ class AVLTree {
         return node;
     }
 
-    addNode(key) {
+    async addNode(key) {
         const startTime = performance.now();
-        this.root = this.insert(this.root, key);
+        renderTree();
+        if (this.root) {
+            await showPointerAtNode(this.root.key, "Starting insertion at the root...");
+        }
+        this.root = await this.insert(this.root, key);
         const endTime = performance.now();
         this.uiUpdater.setOperationTime(endTime - startTime);
         this.updateHistory();
+        renderTree();
+        printTraversals();
     }
 
     search(node, key, path = []) {
@@ -174,11 +306,8 @@ class AVLTree {
             if (key === current.key) {
                 break;
             }
-            if (key < current.key) {
-                current = current.left;
-            } else {
-                current = current.right;
-            }
+            if (key < current.key) current = current.left;
+            else current = current.right;
         }
         this.updateSearchPath(path);
     }
@@ -196,6 +325,8 @@ class AVLTree {
         this.uiUpdater.setOperationTime(endTime - startTime);
         this.highlightSearchPath(key);
         this.updateHistory();
+        appendStepMessage(result ? `Key ${key} found in the tree.` : `Key ${key} not found in the tree.`);
+        renderTree();
         return result;
     }
 
@@ -205,23 +336,34 @@ class AVLTree {
         const endTime = performance.now();
         this.uiUpdater.setOperationTime(endTime - startTime);
         this.updateHistory();
+        renderTree();
+        printTraversals();
+    }
+
+    async rotateForDeletion(node, direction, reasonDetail) {
+        return await this.rotate(node, direction, reasonDetail);
     }
 
     delete(root, key, parent = null) {
         this.uiUpdater.incrementCounter('comparisons');
         if (!root) return root;
 
+        appendStepMessage(`Comparing ${key} with ${root.key} for deletion.`);
         if (key < root.key) {
+            appendStepMessage(`Key ${key} < ${root.key}, going LEFT for deletion.`);
             root.left = this.delete(root.left, key, root);
         } else if (key > root.key) {
+            appendStepMessage(`Key ${key} > ${root.key}, going RIGHT for deletion.`);
             root.right = this.delete(root.right, key, root);
         } else {
+            appendStepMessage(`Key ${key} found. Deleting node ${root.key}.`);
             if (!root.left || !root.right) {
                 const deletedNode = root;
                 root = root.left || root.right;
                 this.history.unshift({ type: 'delete', key: deletedNode.key, parent: parent ? parent.key : 'none', reason: 'Node had one or no children' });
             } else {
                 const temp = this.getMinValueNode(root.right);
+                appendStepMessage(`Node ${root.key} has two children, using successor ${temp.key}.`);
                 this.history.unshift({ type: 'delete', key: root.key, parent: parent ? parent.key : 'none', reason: 'Node had two children' });
                 root.key = temp.key;
                 root.right = this.delete(root.right, temp.key, root);
@@ -235,22 +377,24 @@ class AVLTree {
 
         if (balance > 1) {
             if (this.getBalance(root.left) >= 0) {
-                this.history.unshift({ type: 'rotation', key: root.key, rotation: 'right', reason: 'Left-Left case' });
-                return this.rotate(root, 'right');
+                appendStepMessage(`Left-Left imbalance at ${root.key} post-deletion, performing RIGHT rotation.`);
+                return this.rotate(root, 'right', 'Left-Left after deletion');
             }
-            root.left = this.rotate(root.left, 'left');
+            appendStepMessage(`Left-Right imbalance at ${root.key} post-deletion, performing LEFT-RIGHT steps.`);
+            root.left = this.rotate(root.left, 'left', 'Left-Right inner step after deletion');
             this.history.unshift({ type: 'rotation', key: root.key, rotation: 'left-right', reason: 'Left-Right case' });
-            return this.rotate(root, 'right');
+            return this.rotate(root, 'right', 'Completing Left-Right after deletion');
         }
 
         if (balance < -1) {
             if (this.getBalance(root.right) <= 0) {
-                this.history.unshift({ type: 'rotation', key: root.key, rotation: 'left', reason: 'Right-Right case' });
-                return this.rotate(root, 'left');
+                appendStepMessage(`Right-Right imbalance at ${root.key} post-deletion, performing LEFT rotation.`);
+                return this.rotate(root, 'left', 'Right-Right after deletion');
             }
-            root.right = this.rotate(root.right, 'right');
+            appendStepMessage(`Right-Left imbalance at ${root.key} post-deletion, performing RIGHT-LEFT steps.`);
+            root.right = this.rotate(root.right, 'right', 'Right-Left inner step after deletion');
             this.history.unshift({ type: 'rotation', key: root.key, rotation: 'right-left', reason: 'Right-Left case' });
-            return this.rotate(root, 'left');
+            return this.rotate(root, 'left', 'Completing Right-Left after deletion');
         }
 
         this.updateNodeDepthAndBalance(root);
@@ -259,20 +403,19 @@ class AVLTree {
 
     getMinValueNode(node) {
         let current = node;
-        while (current.left) current = current.left;
+        while (current && current.left) current = current.left;
         return current;
     }
 
     undoLastOperation() {
         const lastOperation = this.history.shift();
         if (!lastOperation) return;
-
+        appendStepMessage(`Undoing last operation: ${lastOperation.type} on key ${lastOperation.key}.`);
         if (lastOperation.type === 'add') {
             this.root = this.delete(this.root, lastOperation.key);
         } else if (lastOperation.type === 'delete') {
             this.root = this.insert(this.root, lastOperation.key);
         }
-
         this.updateHistory();
         renderTree();
         printTraversals();
@@ -285,23 +428,19 @@ class AVLTree {
             const listItem = document.createElement('li');
             listItem.textContent = this.formatHistoryItem(operation);
             historyList.appendChild(listItem);
-            updateHistoryMessage(this.formatHistoryItem(operation));  // Update the scrolling history message
         });
-        if (this.history.length > 0) {
-            updateHistoryMessage(this.formatHistoryItem(this.history[0])); // Fixed here
-        }
     }
 
     formatHistoryItem(operation) {
         switch (operation.type) {
             case 'add':
-                return `Added node with key ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
+                return `Added node ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
             case 'delete':
-                return `Deleted node with key ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
+                return `Deleted node ${operation.key} under parent ${operation.parent}. Reason: ${operation.reason}`;
             case 'rotation':
-                return `Performed ${operation.rotation} rotation on node with key ${operation.key}. Reason: ${operation.reason}`;
+                return `Performed ${operation.rotation} rotation on node ${operation.key}. Reason: ${operation.reason}`;
             case 'search':
-                return `Searched for node with key ${operation.key}. Path: ${operation.path.join(' -> ')}. ${operation.found ? 'Node found.' : 'Node not found.'}`;
+                return `Searched for ${operation.key}. Path: ${operation.path.join(' -> ')}. ${operation.found ? 'Found.' : 'Not found.'}`;
         }
     }
 
@@ -330,16 +469,12 @@ class AVLTree {
     }
 
     getDepth(node = this.root) {
-        if (!node) {
-            return 0;
-        }
+        if (!node) return 0;
         return 1 + Math.max(this.getDepth(node.left), this.getDepth(node.right));
     }
 
     getComplexity(node = this.root) {
-        if (!node) {
-            return 0;
-        }
+        if (!node) return 0;
         return 1 + this.getComplexity(node.left) + this.getComplexity(node.right);
     }
 }
@@ -347,20 +482,17 @@ class AVLTree {
 let uiUpdater = new UIUpdater();
 let tree = new AVLTree(uiUpdater);
 
-function addValues() {
+async function addValues() {
     const valueInput = document.getElementById('valueInput');
     const values = valueInput.value.split(/[\s,]+/).map(v => parseInt(v, 10)).filter(v => !isNaN(v));
     if (values.length > 0) {
-        values.forEach(value => {
-            tree.addNode(value);
-        });
-
+        for (const value of values) {
+            await tree.addNode(value);
+        }
         updateOperations('addValues', values);
         valueInput.value = '';
-        renderTree();
-        printTraversals();
     } else {
-        alert('Please enter a valid number or list of numbers, separated by commas or spaces.');
+        alert('Please enter valid numbers separated by commas or spaces.');
     }
 }
 
@@ -371,8 +503,6 @@ function deleteValue() {
         tree.deleteNode(value);
         updateOperations('deleteValue', value);
         valueInput.value = '';
-        renderTree();
-        printTraversals();
     } else {
         alert('Please enter a valid number.');
     }
@@ -387,39 +517,47 @@ function updateOperations(type, values) {
 
 function undoLastOperation() {
     tree.undoLastOperation();
-    renderTree();
-    printTraversals();
 }
 
 function renderTree() {
     if (!tree.root) {
+        d3.select("#tree-container").select("svg").remove();
         return;
     }
 
     const margin = { top: 20, right: 40, bottom: 150, left: 10 };
     const container = d3.select("#tree-container").node().getBoundingClientRect();
     const width = container.width - margin.right - margin.left;
-    const height = container.height- margin.top - margin.bottom;
+    const height = container.height - margin.top - margin.bottom;
 
-    // Remove any existing SVG element inside #tree-container
     d3.select("#tree-container").select("svg").remove();
 
     const svg = d3.select("#tree-container")
         .append("svg")
         .attr("width", container.width)
         .attr("height", container.height)
-        .call(zoom)  // Apply zoom behavior
+        .call(zoom)
         .append("g")
         .attr("id", "svg-content")
         .attr("transform", currentTransform);
-    const treemap = d3.tree().size([height, width]);
 
+    if (!pointer) {
+        pointer = svg.append("circle")
+            .attr("id", "pointer")
+            .attr("r", 6)
+            .style("fill", "red")
+            .style("stroke", "black")
+            .style("stroke-width", "1")
+            .style("display", "none");
+    }
+
+    const treemap = d3.tree().size([height, width]);
     const rootHierarchy = d3.hierarchy(tree.root, d => [d.left, d.right].filter(d => d));
     rootHierarchy.x0 = height / 2;
     rootHierarchy.y0 = 0;
 
     let i = 0;
-    const duration = 750;
+    const duration = animationsEnabled ? 750 : 0;
 
     function update(source) {
         const treeData = treemap(rootHierarchy);
@@ -452,16 +590,16 @@ function renderTree() {
 
         nodeEnter.append('text')
             .attr("dy", "1em")
+            .style("font-size", "10px")
             .attr("x", d => d.children || d._children ? -13 : 13)
             .attr("text-anchor", d => d.children || d._children ? "end" : "start")
-            .style("font-size", "10px")
             .text(d => `Depth: ${d.depth}`);
 
         nodeEnter.append('text')
             .attr("dy", "2em")
+            .style("font-size", "10px")
             .attr("x", d => d.children || d._children ? -13 : 13)
             .attr("text-anchor", d => d.children || d._children ? "end" : "start")
-            .style("font-size", "10px")
             .attr("paint-order", "stroke")
             .text(d => `Balance: ${tree.getBalance(d.data)}`);
 
@@ -543,8 +681,6 @@ function renderTree() {
     }
 
     update(rootHierarchy);
-
-    // Apply the current zoom transform
     d3.select("#tree-container").select("svg").call(zoom.transform, currentTransform);
 }
 
@@ -557,33 +693,23 @@ function updateDimensions() {
         .attr("height", height + margin.top + margin.bottom);
 }
 
-var toggleOpen = document.getElementById('toggleOpen');
-var toggleClose = document.getElementById('toggleClose');
-var collapseMenu = document.getElementById('collapseMenu');
-
-toggleOpen.addEventListener('click', () => {
-    collapseMenu.style.display = collapseMenu.style.display === 'block' ? 'none' : 'block';
-});
-
-window.onresize = () => {
-    updateDimensions();
-    renderTree();
-};
-
 document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('valueInput').addEventListener('keypress', function (e) {
+    document.getElementById('valueInput').addEventListener('keypress', async function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            d3.select("#tree-container").select("svg").remove();
-            addValues();
+            await addValues();
         }
     });
-
-    document.getElementById('toggleBreadcrumb').addEventListener('click', function () {
-        const buttons = document.getElementById('breadcrumb-buttons');
-        const icon = document.getElementById('breadcrumbIcon');
-        buttons.classList.toggle('hidden');
-        icon.style.transform = buttons.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(-90deg)';
+    document.getElementById('animationsCheckbox').addEventListener('change', function(e) {
+        animationsEnabled = e.target.checked;
+    });
+    
+    // Update the existing showWelcomeMessage function to sync the checkbox
+    document.getElementById('toggle-animations').addEventListener('click', () => {
+        animationsEnabled = !animationsEnabled;
+        document.getElementById('animationsCheckbox').checked = animationsEnabled;
+        document.getElementById('toggle-animations').textContent = 
+            animationsEnabled ? "Disable Animations" : "Enable Animations";
     });
     if (!localStorage.getItem('visited')) {
         showWelcomeMessage();
@@ -594,23 +720,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function showWelcomeMessage() {
     const modal = document.createElement('div');
-    modal.classList.add('fixed', 'inset-0', 'bg-gray-800', 'bg-opacity-50', 'flex', 'items-center', 'justify-center', 'z-50');
+    modal.classList.add('fixed', 'inset-0', 'bg-gray-800/50', 'flex', 'items-center', 'justify-center', 'z-50');
     modal.innerHTML = `
-        <div class="bg-white p-6 rounded shadow-lg text-center max-w-md mx-auto">
-            <h2 class="text-xl font-bold mb-4">Welcome to the AVL Tree Visualizer!</h2>
-            <p class="mb-4">This tool allows you to visualize AVL Trees. You can add, delete, search, and reset nodes to see how the tree balances itself.</p>
-            <p class="mb-4">Use the mouse scroll to zoom in and out, and drag to pan the view. On touch devices, use pinch gestures to zoom and swipe to pan.</p>
-            <p class="mb-4">You can see the processes involved in balancing the tree, including rotations, comparisons, and operation time. The search path and balancing actions are visually highlighted.</p>
-            <button id="welcome-ok" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">OK</button>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl text-center max-w-md mx-auto border border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Welcome to the AVL Tree Visualizer!</h2>
+            <p class="mb-4 text-gray-600 dark:text-gray-300">Experience AVL operations step-by-step with visual highlights and timed animations. You can disable animations to see the results instantly.</p>
+            <div class="flex space-x-4 justify-center mt-4">
+                <button id="welcome-ok" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors">OK</button>
+                <button id="toggle-animations" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Disable Animations</button>
+            </div>
         </div>
     `;
-    document.body.appendChild(modal);
+    // document.body.appendChild(modal);
 
-    document.getElementById('welcome-ok').addEventListener('click', () => {
-        modal.remove();
-        localStorage.setItem('visited', 'true');
-        loadZoomState();
-    });
+    // document.getElementById('welcome-ok').addEventListener('click', () => {
+    //     modal.remove();
+    //     localStorage.setItem('visited', 'true');
+    //     loadZoomState();
+    // });
+
+    // document.getElementById('toggle-animations').addEventListener('click', () => {
+    //     animationsEnabled = !animationsEnabled; 
+    //     document.getElementById('toggle-animations').textContent = animationsEnabled ? "Disable Animations" : "Enable Animations";
+    // });
 }
 
 function recenterTree() {
@@ -634,7 +766,7 @@ function loadZoomState() {
         zoomLevel = savedZoomLevel;
     }
     renderTree();
-};
+}
 
 function updateTreeStats() {
     document.getElementById('tree-depth').textContent = tree.getDepth();
@@ -655,19 +787,24 @@ function printTraversals() {
 
 function updateTraversalResults(preOrder, inOrder, postOrder) {
     const resultBox = document.getElementById('resultBox');
-    resultBox.value = `Pre-order: ${preOrder}\nIn-order: ${inOrder.join(' ')}\nPost-order: ${postOrder.join(' ')}`;
+    if (resultBox) {
+        resultBox.value = `Pre-order: ${preOrder}\nIn-order: ${inOrder.join(' ')}\nPost-order: ${postOrder.join(' ')}`;
+    }
 }
 
 function resetTree() {
     tree = new AVLTree(uiUpdater);
     uiUpdater.reset();
-    document.getElementById('resultBox').value = '';
-    document.getElementById('valueInput').value = '';
+    const resultBox = document.getElementById('resultBox');
+    if (resultBox) resultBox.value = '';
+    const valueInput = document.getElementById('valueInput');
+    if (valueInput) valueInput.value = '';
     localStorage.removeItem('operations');
     localStorage.removeItem('zoomState');
     d3.select("#tree-container").select("svg").remove();
     tree.history = [];
     tree.updateHistory();
+    appendStepMessage("Tree reset.");
 }
 
 function searchValue() {
@@ -676,6 +813,7 @@ function searchValue() {
     if (!isNaN(value)) {
         const result = tree.searchNode(value);
         alert(result ? `Node with key ${value} found.` : `Node with key ${value} not found.`);
+        renderTree();
     } else {
         alert('Please enter a valid number.');
     }
@@ -685,33 +823,27 @@ function executeSavedOperations() {
     const savedOperations = localStorage.getItem('operations');
     if (savedOperations) {
         const operations = JSON.parse(savedOperations);
-        operations.forEach(op => {
-            if (op.type === 'addValues') {
-                op.values.forEach(value => {
-                    tree.addNode(value);
-                });
-            } else if (op.type === 'deleteValue') {
-                tree.deleteNode(op.values);
+        (async () => {
+            for (const op of operations) {
+                if (op.type === 'addValues') {
+                    for (const value of op.values) {
+                        await tree.addNode(value);
+                    }
+                } else if (op.type === 'deleteValue') {
+                    tree.deleteNode(op.values);
+                }
             }
-        });
-        renderTree();  // Ensure tree is rendered after loading saved operations
+            renderTree();
+        })();
     }
 }
 
-window.onload = function () {
+window.onload = async function () {
     uiUpdater = new UIUpdater();
     tree = new AVLTree(uiUpdater);
     executeSavedOperations();
     updateDimensions();
     printTraversals();
     updateTreeStats();
+    renderTree();
 };
-
-function updateHistoryMessage(message) {
-    const historyText = document.getElementById('historyText');
-    historyText.textContent = message;
-    historyText.style.animation = 'none';
-    // Trigger reflow
-    void historyText.offsetWidth;
-    historyText.style.animation = 'scrollText 12s linear 1';
-}

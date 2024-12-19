@@ -1,136 +1,240 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AVL Tree Visualizer</title>
-    <link rel="icon" href="652478092941459468.gif" type="image/x-icon">
-    <meta name="description" content="Visualize AVL Trees with ease. Add, delete, and reset values to see how AVL Trees balance themselves.">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- Tailwind Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['selector', '.dark'],
+      theme: {
+        extend: {
+          colors: {
+            clifford: '#da373d',
+          },
+          keyframes: {
+            slowspin: {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' }
+            }
+          },
+          animation: {
+            slowspin: 'slowspin 60s linear infinite'
+          }
+        }
+      }
+    }
+  </script>
+  <title>AVL Tree Visualizer</title>
+  <link rel="icon" href="652478092941459468.gif" type="image/x-icon"/>
+  <meta name="description" content="Visualize AVL Trees with ease. Add, delete, and reset values to see how AVL Trees balance themselves.">
+  <style type="text/tailwindcss">
+    @layer base {
+      .logo {
+        @apply animate-slowspin;
+      }
+    }
+  </style>
 </head>
+<body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300 min-h-screen font-sans">
 
-<body class="min-h-screen text-gray-900">
-    <header class="flex border-b py-4 px-4 sm:px-10 bg-white font-sans min-h-[70px] tracking-wide sticky top-0 z-50">
-        <a href="#">
-            <img src="https://avatars.githubusercontent.com/u/71889336?v=4" alt="logo" title="logo" class="logo w-12 h-12 rounded-full" />
-        </a>
-        <div id="historyMessage" class="flex-1 lg:hidden overflow-hidden whitespace-nowrap px-4">
-            <span id="historyText" class="block"></span>
-        </div>
-        <button id="toggleOpen" class="lg:hidden ml-auto">
-            <svg class="w-7 h-7" fill="#000" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-            </svg>
-        </button>
-        <div id="collapseMenu" class="lg:!block w-full lg:w-auto hidden lg:block">
-            <ul class="lg:flex lg:ml-14 lg:gap-x-5">
-                <li>
-                    <button onclick="addValues()" class="lg:hover:text-[#007bff] text-[#007bff] block font-semibold text-[15px]">Add Values</button>
-                </li>
-                <li class="max-lg:border-b max-lg:py-3 px-3">
-                    <button onclick="deleteValue()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Delete Value</button>
-                </li>
-                <li class="max-lg:border-b max-lg:py-3 px-3">
-                    <button onclick="searchValue()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Search Value</button>
-                </li>
-                <li class="max-lg:border-b max-lg:py-3 px-3">
-                    <button onclick="resetTree()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Reset Tree</button>
-                </li>
-                <li class="max-lg:border-b max-lg:py-3 px-3">
-                    <button onclick="undoLastOperation()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Undo Last Operation</button>
-                </li>
-                <li class="max-lg:border-b max-lg:py-3 px-3">
-                    <button onclick="recenterTree()" class="lg:hover:text-[#007bff] text-gray-500 block font-semibold text-[15px]">Recenter Tree</button>
-                </li>
-            </ul>
-        </div>
-    </header>
-    <div class="flex flex-col lg:flex-row">
-        <!-- Rotations/Metrics/Tree Stats Section -->
-        <div class="lg:w-1/5 p-4 border-r border-gray-300 bg-white hidden lg:block">
-            <div class="mt-16">
-                <h2 class="text-xl font-bold mb-2">Rotations</h2>
-                <ul class="list-disc pl-5">
-                    <li>Left Rotations: <span id="left-rotations">0</span></li>
-                    <li>Right Rotations: <span id="right-rotations">0</span></li>
-                    <li>Left-Right Rotations: <span id="left-right-rotations">0</span></li>
-                    <li>Right-Left Rotations: <span id="right-left-rotations">0</span></li>
-                </ul>
-                <h2 class="text-xl font-bold mb-2 mt-4">Metrics</h2>
-                <ul class="list-disc pl-5">
-                    <li>Comparisons: <span id="comparisons">0</span></li>
-                    <li>Operation Time (ms): <span id="operation-time">0.00</span></li>
-                </ul>
-                <h2 class="text-xl font-bold mb-2 mt-4">Tree Stats</h2>
-                <ul class="list-disc pl-5">
-                    <li>Tree Depth: <span id="tree-depth">0</span></li>
-                    <li>Tree Complexity: <span id="tree-complexity">0</span></li>
-                </ul>
-            </div>
-        </div>
-        <div class="flex-1 p-4 lg:w-3/5">
-            <div class="flex justify-center mb-4 sticky top-[70px] bg-gray-100 z-10 p-4">
-                <input id="valueInput" type="text" placeholder="Enter values..." class="p-2 border border-gray-300 rounded w-full max-w-md bg-white">
-            </div>
-            <div id="tree-container" class="relative border border-gray-300 rounded p-4 mb-4 flex items-center justify-center" style="height: 400px; max-width: 100%; overflow-x: hidden;">
-            </div>
-            <div class="lg:hidden mb-4 p-4 border border-gray-300 rounded">
-                <h2 class="text-xl font-bold mb-2">Rotations</h2>
-                <ul class="list-disc pl-5">
-                    <li>Left Rotations: <span id="left-rotations">0</span></li>
-                    <li>Right Rotations: <span id="right-rotations">0</span></li>
-                    <li>Left-Right Rotations: <span id="left-right-rotations">0</span></li>
-                    <li>Right-Left Rotations: <span id="right-left-rotations">0</span></li>
-                </ul>
-                <h2 class="text-xl font-bold mb-2 mt-4">Metrics</h2>
-                <ul class="list-disc pl-5">
-                    <li>Comparisons: <span id="comparisons">0</span></li>
-                    <li>Operation Time (ms): <span id="operation-time">0.00</span></li>
-                </ul>
-                <h2 class="text-xl font-bold mb-2 mt-4">Tree Stats</h2>
-                <ul class="list-disc pl-5">
-                    <li>Tree Depth: <span id="tree-depth">0</span></li>
-                    <li>Tree Complexity: <span id="tree-complexity">0</span></li>
-                </ul>
-            </div>
-            <div class="mb-4 lg:w-3/5 mx-auto">
-                <textarea id="resultBox" rows="5" class="w-full p-2 border border-gray-300 rounded" readonly></textarea>
-            </div>
-        </div>
-        <div class="lg:w-1/5 p-4 border-l border-gray-300 bg-white">
-            <div class="">
-                <h2 class="text-xl font-bold mb-2">Operations</h2>
-                <ul id="history-list" class="space-y-2"></ul>
-            </div>
-        </div>
-    </div>
-    <div class="fixed bottom-4 right-4 lg:hidden flex flex-col items-end">
-        <div id="breadcrumb-buttons" class="flex flex-col space-y-2 mb-2">
-            <button onclick="addValues()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Add</button>
-            <button onclick="deleteValue()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Delete</button>
-            <button onclick="searchValue()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Search</button>
-            <button onclick="undoLastOperation()" class="px-4 py-2 font-bold text-white bg-blue-500 hover:bg-blue-600 rounded shadow-md">Undo</button>
-            <button onclick="resetTree()" class="px-4 py-2 font-bold text-white bg-red-500 hover:bg-red-600 rounded shadow-md">Reset Tree</button>
-            <button onclick="recenterTree()" class="px-4 py-2 font-bold text-white bg-green-500 hover:bg-green-600 rounded shadow-md">Recenter</button>
-        </div>
-        <button id="toggleBreadcrumb" title="Toggle Menu" class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md transform transition-transform">
-            <svg id="breadcrumbIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" defer></script>
-    <script src="https://d3js.org/d3.v6.min.js" defer></script>
-    <script src="script.js" defer></script>
-</body>
-
-<footer class="fixed bottom-4 left-4 flex items-center space-x-2 ">
-    <a href="https://github.com/VileEnd/avlTreeExam" target="_blank">
-        <img src="github-mark.png" alt="GitHub" class="w-8 h-8 opacity-70">
+  <!-- Header -->
+  <!-- On mobile: logo + centered input + dark mode toggle. On desktop: logo + dark mode + inline actions + input on the right -->
+  <header class="flex items-center py-3 px-4 sm:px-10 border-b border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-50">
+    <!-- Logo -->
+    <a href="#" class="flex-shrink-0">
+      <img src="https://avatars.githubusercontent.com/u/71889336?v=4" alt="logo" class="w-12 h-12 rounded-full logo" />
     </a>
-    <span>Made by <a href="https://github.com/VileEnd/avlTreeExam" target="_blank" class="text-blue-500 font-bold">VileEnd</a></span>
-</footer>
 
+    <!-- On mobile: center input. On desktop: input at the end. -->
+    <div class="flex-1 flex items-center justify-center lg:justify-end mx-4">
+      <input id="valueInput" type="text" placeholder="Enter values..."
+             class="w-full max-w-sm p-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-colors text-sm" />
+    </div>
+
+    <!-- Dark Mode Toggle and Desktop Action Buttons -->
+    <div class="flex items-center space-x-4">
+      <!-- Dark Mode Toggle -->
+      <button id="darkModeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none" title="Toggle Dark Mode">
+        <svg class="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 3v2m0 14v2m9-9h-2M5 12H3M17.656 6.343l-1.414 1.414M6.343 17.657l1.414-1.414M17.657 17.657l-1.414-1.414M6.343 6.343l1.414 1.414"/>
+        </svg>
+      </button>
+      <div class="flex items-center space-x-2">
+        <input type="checkbox" id="animationsCheckbox" checked 
+               class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"/>
+        <label for="animationsCheckbox" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Animations
+        </label>
+      </div>
+
+      <!-- Desktop inline action buttons (hidden on mobile) -->
+      <div class="hidden lg:flex items-center space-x-3">
+        <button onclick="addValues()" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700 focus:outline-none">Add Values</button>
+        <button onclick="deleteValue()" class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none">Delete Value</button>
+        <button onclick="searchValue()" class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none">Search Value</button>
+        <button onclick="resetTree()" class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none">Reset Tree</button>
+        <button onclick="undoLastOperation()" class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none">Undo Last</button>
+        <button onclick="recenterTree()" class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none">Recenter</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <div class="flex flex-col lg:flex-row">
+    <!-- Left Sidebar (Desktop) -->
+    <div class="lg:w-1/5 p-4 border-r border-gray-300 dark:border-gray-700 hidden lg:block bg-white dark:bg-gray-800 space-y-6">
+      <div class="p-4 rounded shadow bg-white dark:bg-gray-800 dark:border-gray-700 border border-gray-300 dark:border-gray-700">
+        <h2 class="text-xl font-bold mb-2">Rotations</h2>
+        <ul class="list-disc pl-5 text-sm space-y-1">
+          <li>Left Rotations: <span id="left-rotations">0</span></li>
+          <li>Right Rotations: <span id="right-rotations">0</span></li>
+          <li>Left-Right Rotations: <span id="left-right-rotations">0</span></li>
+          <li>Right-Left Rotations: <span id="right-left-rotations">0</span></li>
+        </ul>
+      </div>
+      <div class="p-4 rounded shadow bg-white dark:bg-gray-800 dark:border-gray-700 border border-gray-300 dark:border-gray-700">
+        <h2 class="text-xl font-bold mb-2">Metrics</h2>
+        <ul class="list-disc pl-5 text-sm space-y-1">
+          <li>Comparisons: <span id="comparisons">0</span></li>
+          <li>Operation Time (ms): <span id="operation-time">0.00</span></li>
+        </ul>
+      </div>
+      <div class="p-4 rounded shadow bg-white dark:bg-gray-800 dark:border-gray-700 border border-gray-300 dark:border-gray-700">
+        <h2 class="text-xl font-bold mb-2">Tree Stats</h2>
+        <ul class="list-disc pl-5 text-sm space-y-1">
+          <li>Tree Depth: <span id="tree-depth">0</span></li>
+          <li>Tree Complexity: <span id="tree-complexity">0</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Center Content -->
+    <div class="flex-1 p-4 lg:w-3/5 space-y-4">
+      <!-- Tree Container -->
+      <div id="tree-container" class="relative border border-gray-300 dark:border-gray-700 rounded p-4 bg-white dark:bg-gray-800 flex items-center justify-center"
+           style="height: 400px; max-width: 100%; overflow-x: hidden;">
+      </div>
+
+      <!-- Steps Box (second in mobile as requested) -->
+      <div class="p-4 rounded shadow bg-white dark:bg-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+        <h2 class="text-xl font-bold mb-2">Steps</h2>
+        <div id="stepsBox" class="h-52 overflow-auto border border-gray-300 dark:border-gray-700 rounded p-2 bg-white dark:bg-gray-800 dark:text-gray-100 text-sm"></div>
+      </div>
+
+      <!-- Mobile metrics -->
+      <div class="lg:hidden space-y-4">
+        <div class="p-4 rounded shadow bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+          <h2 class="text-xl font-bold mb-2">Rotations</h2>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li>Left Rotations: <span id="left-rotations">0</span></li>
+            <li>Right Rotations: <span id="right-rotations">0</span></li>
+            <li>Left-Right Rotations: <span id="left-right-rotations">0</span></li>
+            <li>Right-Left Rotations: <span id="right-left-rotations">0</span></li>
+          </ul>
+        </div>
+        <div class="p-4 rounded shadow bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+          <h2 class="text-xl font-bold mb-2">Metrics</h2>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li>Comparisons: <span id="comparisons">0</span></li>
+            <li>Operation Time (ms): <span id="operation-time">0.00</span></li>
+          </ul>
+        </div>
+        <div class="p-4 rounded shadow bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+          <h2 class="text-xl font-bold mb-2">Tree Stats</h2>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li>Tree Depth: <span id="tree-depth">0</span></li>
+            <li>Tree Complexity: <span id="tree-complexity">0</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Result Box -->
+      <div class="p-4 rounded shadow bg-white dark:bg-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+        <textarea id="resultBox" rows="5" class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-colors" readonly></textarea>
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="lg:w-1/5 p-4 border-l border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div class="p-4 rounded shadow bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+        <h2 class="text-xl font-bold mb-2">Operations</h2>
+        <ul id="history-list" class="space-y-2 text-sm max-h-[60vh] overflow-auto"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Floating Menu -->
+  <div class="fixed bottom-4 right-4 flex flex-col items-end space-y-2 lg:hidden">
+    <!-- Rotating button and actions (breadcrumb-buttons) -->
+    <div id="breadcrumb-buttons" class="hidden flex-col space-y-2 mb-2 p-3 rounded shadow-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+      <button onclick="addValues()" class="px-4 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded shadow-md focus:outline-none">Add</button>
+      <button onclick="deleteValue()" class="px-4 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded shadow-md focus:outline-none">Delete</button>
+      <button onclick="searchValue()" class="px-4 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded shadow-md focus:outline-none">Search</button>
+      <button onclick="undoLastOperation()" class="px-4 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded shadow-md focus:outline-none">Undo</button>
+      <button onclick="resetTree()" class="px-4 py-2 font-bold text-white bg-red-600 hover:bg-red-700 rounded shadow-md focus:outline-none">Reset</button>
+      <button onclick="recenterTree()" class="px-4 py-2 font-bold text-white bg-green-600 hover:bg-green-700 rounded shadow-md focus:outline-none">Recenter</button>
+    </div>
+    <button id="toggleBreadcrumb" title="Toggle Actions" class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-md transform transition-transform focus:outline-none">
+      <svg id="breadcrumbIcon" class="w-6 h-6 transform rotate-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+  </div>
+
+  <footer class="fixed bottom-4 left-4 flex items-center space-x-2 bg-transparent">
+    <a href="https://github.com/VileEnd/avlTreeExam" target="_blank">
+      <img src="github-mark.png" alt="GitHub" class="w-8 h-8 opacity-70 dark:opacity-90">
+    </a>
+    <span class="text-gray-700 dark:text-gray-300">Made by <a href="https://github.com/VileEnd/avlTreeExam" target="_blank" class="text-indigo-600 font-bold dark:text-indigo-400 hover:underline">VileEnd</a></span>
+  </footer>
+
+  <script src="https://d3js.org/d3.v6.min.js" defer></script>
+  <script src="script.js" defer></script>
+  <script>
+    // Dark mode logic
+    const rootEl = document.documentElement;
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const breadcrumbButtons = document.getElementById('breadcrumb-buttons');
+    const toggleBreadcrumb = document.getElementById('toggleBreadcrumb');
+    const breadcrumbIcon = document.getElementById('breadcrumbIcon');
+
+    // On initial load, prefer system setting if no preference stored
+    if (!('theme' in localStorage)) {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        localStorage.theme = 'dark';
+      } else {
+        localStorage.theme = 'light';
+      }
+    }
+    applyTheme(localStorage.theme);
+
+    darkModeToggle.addEventListener('click', () => {
+      const newTheme = (localStorage.theme === 'dark') ? 'light' : 'dark';
+      localStorage.theme = newTheme;
+      applyTheme(newTheme);
+    });
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        rootEl.classList.add('dark');
+      } else {
+        rootEl.classList.remove('dark');
+      }
+    }
+
+    // Toggle mobile action buttons
+    toggleBreadcrumb.addEventListener('click', () => {
+      breadcrumbButtons.classList.toggle('hidden');
+      if (breadcrumbButtons.classList.contains('hidden')) {
+        breadcrumbIcon.style.transform = 'rotate(0deg)';
+      } else {
+        breadcrumbIcon.style.transform = 'rotate(90deg)';
+      }
+    });
+  </script>
+</body>
 </html>
